@@ -5,8 +5,9 @@ import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import UserProfile from "@/components/workspace/UserProfile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
-import { useParams } from "wouter";
+import { useState, useEffect } from "react";
+import { useParams, useLocation } from "wouter";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 interface Params {
   workspaceId?: string;
@@ -15,7 +16,17 @@ interface Params {
 
 export default function Chat() {
   const params = useParams<Params>();
+  const [location] = useLocation();
   const [selectedChannel, setSelectedChannel] = useState<string | null>(params?.channelId || null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    // Check if showOnboarding is in the URL
+    const searchParams = new URLSearchParams(location.split('?')[1]);
+    if (searchParams.get('showOnboarding') === 'true') {
+      setShowOnboarding(true);
+    }
+  }, [location]);
 
   return (
     <div className="h-screen flex flex-col">
@@ -41,6 +52,11 @@ export default function Chat() {
           <ChatArea channelId={selectedChannel} />
         </ResizablePanel>
       </ResizablePanelGroup>
+
+      <OnboardingTour
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+      />
     </div>
   );
 }

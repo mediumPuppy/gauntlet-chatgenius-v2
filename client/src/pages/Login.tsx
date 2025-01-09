@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/form";
 import { Eye, EyeOff } from "lucide-react";
 import TwoFactorModal from "@/components/auth/TwoFactorModal";
-import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -36,7 +35,6 @@ export default function Login() {
   const [, navigate] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -53,12 +51,8 @@ export default function Login() {
 
   const handle2FAVerify = (code: string) => {
     setShow2FA(false);
-    setShowOnboarding(true);
-  };
-
-  const handleOnboardingClose = () => {
-    setShowOnboarding(false);
-    navigate("/");
+    // Navigate to chat with showOnboarding flag
+    navigate("/chat?showOnboarding=true");
   };
 
   return (
@@ -148,11 +142,6 @@ export default function Login() {
         isOpen={show2FA}
         onClose={() => setShow2FA(false)}
         onVerify={handle2FAVerify}
-      />
-
-      <OnboardingTour
-        isOpen={showOnboarding}
-        onClose={handleOnboardingClose}
       />
     </div>
   );

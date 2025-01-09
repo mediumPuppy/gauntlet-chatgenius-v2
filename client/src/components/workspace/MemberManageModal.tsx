@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,16 +7,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -26,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Shield, UserX } from "lucide-react";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 
 interface Member {
   id: number;
@@ -51,9 +42,15 @@ export default function MemberManageModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
 
+  // Update role when member changes
+  useEffect(() => {
+    if (member) {
+      setRole(member.role);
+    }
+  }, [member]);
+
   const handleRoleChange = async () => {
     setIsSubmitting(true);
-    // Call the parent component's handler
     if (member && onRoleChange) {
       onRoleChange(member.id, role);
     }
@@ -134,26 +131,14 @@ export default function MemberManageModal({
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-destructive">Remove Member</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to remove {member.name} from the workspace? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmRemoveMember} 
-              disabled={isSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Remove Member
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmModal
+        isOpen={showRemoveConfirm}
+        onClose={() => setShowRemoveConfirm(false)}
+        onConfirm={confirmRemoveMember}
+        title="Remove Member"
+        description={`Are you sure you want to remove ${member.name} from the workspace? This action cannot be undone.`}
+        isLoading={isSubmitting}
+      />
     </>
   );
 }

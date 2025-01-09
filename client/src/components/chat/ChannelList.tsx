@@ -333,7 +333,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
             <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleLeaveChannel} 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[100px] px-4"
             >
               Leave Channel
             </AlertDialogAction>

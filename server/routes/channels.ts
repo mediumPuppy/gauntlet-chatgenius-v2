@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@db";
-import { channels, messages, workspaceMembers } from "@db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { channels, messages, workspaceMembers, users } from "@db/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { z } from "zod";
 
 const router = Router();
@@ -256,6 +256,85 @@ router.post("/api/channels/:channelId/archive", async (req, res) => {
   } catch (error) {
     console.error('Error archiving channel:', error);
     res.status(500).json({ message: 'Failed to archive channel' });
+  }
+});
+
+// Create a direct message channel
+router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
+  try {
+    const workspaceId = parseInt(req.params.workspaceId);
+    const userId = 1; // TODO: Replace with actual user ID from auth
+    const { targetUserId } = req.body;
+
+    if (!targetUserId) {
+      return res.status(400).json({ message: 'Target user ID is required' });
+    }
+
+    // Verify both users are workspace members
+    const memberships = await db.query.workspaceMembers.findMany({
+      where: and(
+        eq(workspaceMembers.workspaceId, workspaceId),
+        inArray(workspaceMembers.userId, [userId, targetUserId])
+      ),
+    });
+
+    if (memberships.length !== 2) {
+      return res.status(403).json({ message: 'One or both users are not workspace members' });
+    }
+
+    // Check if DM channel already exists between these users
+    const existingDM = await db.query.channels.findFirst({
+      where: and(
+        eq(channels.workspaceId, workspaceId),
+        eq(channels.isDm, true),
+        eq(channels.type, 'dm'),
+        inArray(channels.metadata?.dmMembers, [userId, targetUserId]) //Check for existing DM between users
+      ),
+    });
+
+    if (existingDM) {
+      return res.json(existingDM);
+    }
+
+    // Get target user info for channel name
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, targetUserId),
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Target user not found' });
+    }
+
+    // Create the DM channel
+    const [channel] = await db.insert(channels)
+      .values({
+        workspaceId,
+        name: targetUser.username, // Use target user's name for the channel
+        type: 'dm',
+        isDm: true,
+        isPrivate: true,
+        settings: {
+          retention: {
+            type: 'inherit',
+            days: null
+          },
+          defaultNotifications: 'all_messages',
+          allowThreads: true,
+          allowUploads: true,
+          allowIntegrations: false,
+          allowBots: false
+        },
+        createdBy: userId,
+        metadata: {
+          dmMembers: [userId, targetUserId]
+        }
+      })
+      .returning();
+
+    res.status(201).json(channel);
+  } catch (error) {
+    console.error('Error creating DM channel:', error);
+    res.status(500).json({ message: 'Failed to create DM channel' });
   }
 });
 

@@ -41,8 +41,9 @@ export function CreateDMDialog({ trigger }: CreateDMDialogProps) {
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['/api/workspaces/1/members'],
     select: (data) => {
-      // Filter out any null/undefined users and ensure they belong to workspace 1
-      return data.filter(user => user && user.id);
+      // Filter out any null/undefined users, current user, and ensure they belong to workspace 1
+      const currentUserId = 1; // TODO: Replace with actual user ID from auth
+      return data.filter(user => user && user.id && user.id !== currentUserId);
     }
   });
 

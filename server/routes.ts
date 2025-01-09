@@ -26,7 +26,7 @@ const switchWorkspaceSchema = z.object({
   workspaceId: z.number(),
 });
 
-export function registerRoutes(app: Express): { httpServer: Server, wsServer: MessageServer } {
+export function registerRoutes(app: Express): {httpServer: Server, wsServer: MessageServer} {
   // Register the route handlers
   app.use(channelRoutes);
   app.use(messageRoutes);
@@ -43,26 +43,36 @@ export function registerRoutes(app: Express): { httpServer: Server, wsServer: Me
     try {
       const userId = 1; // TODO: Replace with actual user ID from auth
 
-      const workspaceList = await db.query.workspaces.findMany({
-        where: eq(workspaceMembers.userId, userId),
-        with: {
-          owner: true,
-          members: {
-            where: eq(workspaceMembers.userId, userId),
+      const workspaceList = await db
+        .select({
+          workspace: {
+            id: workspaces.id,
+            name: workspaces.name,
+            settings: workspaces.settings,
           },
-        },
-      });
+          membership: {
+            role: workspaceMembers.role,
+          },
+          owner: {
+            id: users.id,
+            username: users.username,
+          },
+        })
+        .from(workspaceMembers)
+        .innerJoin(workspaces, eq(workspaces.id, workspaceMembers.workspaceId))
+        .innerJoin(users, eq(users.id, workspaces.ownerId))
+        .where(eq(workspaceMembers.userId, userId));
 
-      const response = workspaceList.map((workspace) => ({
-        id: workspace.id,
-        name: workspace.name,
-        role: workspace.members[0]?.role,
+      const response = workspaceList.map((item) => ({
+        id: item.workspace.id,
+        name: item.workspace.name,
+        role: item.membership.role,
         memberCount: 0, // TODO: Add count query
-        isAdmin: workspace.members[0]?.role === 'owner' || workspace.members[0]?.role === 'admin',
-        settings: workspace.settings,
+        isAdmin: item.membership.role === 'owner' || item.membership.role === 'admin',
+        settings: item.workspace.settings,
         owner: {
-          id: workspace.owner.id,
-          username: workspace.owner.username,
+          id: item.owner.id,
+          username: item.owner.username,
         },
       }));
 

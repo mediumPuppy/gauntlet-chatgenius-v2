@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import { Button } from "@/components/ui/button";
@@ -33,62 +33,21 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useWebSocket } from '@/hooks/useWebSocket';
+
 
 interface ChatAreaProps {
   channelId: string | null;
 }
 
-interface UserStatus {
-  text: string;
-  emoji: string;
-  lastActive: string;
-}
-
-interface Channel {
-  id: string;
-  name: string;
-  isPrivate: boolean;
-  unreadCount: number;
-  isDm: boolean;
-  avatar?: string;
-  status?: UserStatus;
-  isOnline?: boolean;
-  topic: string;
-  memberCount: number;
-  pinnedCount: number;
-}
-
-interface MessageType {
-  id: string;
-  user: {
-    name: string;
-    avatar?: string;
-  };
-  content: string;
-  timestamp: string;
-  reactions: Array<{
-    emoji: string;
-    count: number;
-  }>;
-  threadCount: number;
-  thread: MessageType[];
-}
-
-interface MessageComposerProps {
-  onSend: (content: { rawText: string }, files?: { name: string; type: string; size: number; url: string; }[]) => void;
-  placeholder: string;
-}
-
 const channels = {
   starred: [
-    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2, isDm: false },
-    { id: "2", name: "important", isPrivate: true, unreadCount: 0, isDm: false },
+    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
+    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
   ],
   channels: [
-    { id: "3", name: "general", isPrivate: false, unreadCount: 5, isDm: false },
-    { id: "4", name: "random", isPrivate: false, unreadCount: 0, isDm: false },
-    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3, isDm: false },
+    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
+    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
+    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
   ],
   directMessages: [
     {
@@ -102,7 +61,6 @@ const channels = {
       },
       isOnline: true,
       unreadCount: 1,
-      isDm: true,
     },
     {
       id: "7",
@@ -115,7 +73,6 @@ const channels = {
       },
       isOnline: false,
       unreadCount: 0,
-      isDm: true,
     },
     {
       id: "8",
@@ -128,12 +85,11 @@ const channels = {
       },
       isOnline: true,
       unreadCount: 4,
-      isDm: true,
     },
   ],
 };
 
-const getChannelInfo = (channelId: string): Channel | null => {
+const getChannelInfo = (channelId: string) => {
   const allChannels = [
     ...channels.starred,
     ...channels.channels,
@@ -143,6 +99,7 @@ const getChannelInfo = (channelId: string): Channel | null => {
   if (channel) {
     return {
       ...channel,
+      isDm: Boolean(channels.directMessages.find((dm) => dm.id === channelId)),
       topic: channel.isDm
         ? "Direct Message"
         : "This is the main channel for team discussions and announcements",
@@ -153,21 +110,8 @@ const getChannelInfo = (channelId: string): Channel | null => {
   return null;
 };
 
-const getStatusColor = (status: UserStatus | undefined, isOnline: boolean | undefined): string => {
-  if (!status || !isOnline) return "bg-gray-400";
-  return isOnline ? "bg-green-500" : "bg-yellow-500";
-};
-
 export default function ChatArea({ channelId }: ChatAreaProps) {
   const { toast } = useToast();
-  const {
-    isConnected,
-    isReconnecting,
-    subscribeToChannel,
-    unsubscribeFromChannel,
-    sendChatMessage,
-  } = useWebSocket();
-
   const createChannelMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch('/api/workspaces/1/channels', {
@@ -204,7 +148,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     },
   });
 
-  const [messages, setMessages] = useState<MessageType[]>([
+  const [messages] = useState<any[]>([
     {
       id: "1",
       user: { name: "John Doe", avatar: "" },
@@ -222,8 +166,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           content: "Great update! Looking forward to the next phase.",
           timestamp: "11:35 AM",
           reactions: [],
-          threadCount: 0,
-          thread: [],
         },
         {
           id: "t2",
@@ -231,8 +173,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           content: "Can you clarify the timeline?",
           timestamp: "11:40 AM",
           reactions: [{ emoji: "👍", count: 1 }],
-          threadCount: 0,
-          thread: [],
         },
       ],
     },
@@ -255,35 +195,11 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     console.log(`Adding reaction ${emoji} to message ${messageId}`);
   };
 
-  const handleMessageSend = useCallback((content: { rawText: string }, files?: { name: string; type: string; size: number; url: string; }[]) => {
-    if (!channelId) return;
-
-    sendChatMessage(parseInt(channelId), content.rawText);
-
-    const newMessage: MessageType = {
-      id: `temp-${Date.now()}`,
-      user: { name: "You" },
-      content: content.rawText,
-      timestamp: new Date().toLocaleTimeString(),
-      reactions: [],
-      threadCount: 0,
-      thread: [],
-    };
-
-    setMessages(prev => [...prev, newMessage]);
-  }, [channelId, sendChatMessage]);
-
-  useEffect(() => {
-    if (!channelId) return;
-    return () => {
-      unsubscribeFromChannel(parseInt(channelId));
-    };
-  }, [channelId, unsubscribeFromChannel]);
-
-  useEffect(() => {
-    if (!channelId || !isConnected) return;
-    subscribeToChannel(parseInt(channelId));
-  }, [channelId, isConnected, subscribeToChannel]);
+  const handleMessageSend = (content: any, files?: any[], isThread: boolean = false) => {
+    console.log("Message sent:", content);
+    console.log("Files:", files);
+    console.log("Is thread message:", isThread);
+  };
 
   if (!channelId || !channel) {
     return (
@@ -412,12 +328,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         )}
       </div>
 
-      {isReconnecting && (
-        <div className="bg-yellow-100 p-2 text-sm text-yellow-800">
-          Reconnecting to chat server...
-        </div>
-      )}
-
       <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full p-4">
           <div className="space-y-4">
@@ -445,7 +355,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex -space-x-1">
                             {message.reactions.map(
-                              (reaction, i) => (
+                              (reaction: any, i: number) => (
                                 <div
                                   key={i}
                                   className="px-2 py-1 text-xs bg-muted rounded-full flex items-center gap-1"
@@ -509,7 +419,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
                               <ScrollArea className="flex-1 mt-4">
                                 <div className="space-y-4">
-                                  {message.thread.map((reply) => (
+                                  {message.thread.map((reply: any) => (
                                     <div
                                       key={reply.id}
                                       className="flex items-start gap-3"
@@ -537,7 +447,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
                               <div className="mt-4">
                                 <MessageComposer
-                                  onSend={handleMessageSend}
+                                  onSend={(content, files) => handleMessageSend(content, files, true)}
                                   placeholder={`Reply in thread in ${channel.name}`}
                                 />
                               </div>
@@ -586,8 +496,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       <div className="p-4 border-t">
         <MessageComposer
           onSend={handleMessageSend}
-          placeholder={`Message ${channel?.name}`}
-          disabled={!isConnected}
+          placeholder={`Message ${channel.name}`}
         />
       </div>
     </div>

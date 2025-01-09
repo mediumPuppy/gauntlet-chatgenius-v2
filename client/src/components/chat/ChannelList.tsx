@@ -109,7 +109,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
         if (channel.id === channelId) {
           switch (action) {
             case 'mute':
-              return { ...channel, isMuted: true };
+              return { ...channel, isMuted: !channel.isMuted };
             case 'mark-read':
               return { ...channel, unreadCount: 0 };
             default:
@@ -329,9 +329,12 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               Are you sure you want to leave #{showLeaveDialog?.channelName}? You won't be able to see any new messages in this channel until you're re-added.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLeaveChannel} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="flex justify-center gap-2 sm:justify-center">
+            <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleLeaveChannel} 
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Leave Channel
             </AlertDialogAction>
           </AlertDialogFooter>

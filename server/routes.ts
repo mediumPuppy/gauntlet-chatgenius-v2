@@ -29,38 +29,45 @@ export function registerRoutes(app: Express): Server {
   app.use(channelRoutes);
   app.use(messageRoutes);
 
-  // Keep existing workspace routes
   // Get all workspaces for the current user
   app.get("/api/workspaces", async (req, res) => {
     try {
       const userId = 1; // TODO: Replace with actual user ID from auth
 
-      const result = await db.query.workspaceMembers.findMany({
-        where: eq(workspaceMembers.userId, userId),
-        with: {
+      const workspaceList = await db
+        .select({
           workspace: {
-            with: {
-              owner: true,
-              members: true,
-            },
+            id: workspaces.id,
+            name: workspaces.name,
+            settings: workspaces.settings,
           },
-        },
-      });
+          membership: {
+            role: workspaceMembers.role,
+          },
+          owner: {
+            id: users.id,
+            username: users.username,
+          },
+        })
+        .from(workspaceMembers)
+        .innerJoin(workspaces, eq(workspaces.id, workspaceMembers.workspaceId))
+        .innerJoin(users, eq(users.id, workspaces.ownerId))
+        .where(eq(workspaceMembers.userId, userId));
 
-      const workspaceList = result.map((membership) => ({
-        id: membership.workspace.id,
-        name: membership.workspace.name,
-        role: membership.role,
-        memberCount: membership.workspace.members.length,
-        isAdmin: membership.role === 'owner' || membership.role === 'admin',
-        settings: membership.workspace.settings,
+      const response = workspaceList.map((item) => ({
+        id: item.workspace.id,
+        name: item.workspace.name,
+        role: item.membership.role,
+        memberCount: 0, // TODO: Add count query
+        isAdmin: item.membership.role === 'owner' || item.membership.role === 'admin',
+        settings: item.workspace.settings,
         owner: {
-          id: membership.workspace.owner.id,
-          username: membership.workspace.owner.username,
+          id: item.owner.id,
+          username: item.owner.username,
         },
       }));
 
-      res.json(workspaceList);
+      res.json(response);
     } catch (error) {
       console.error('Error fetching workspaces:', error);
       res.status(500).json({ message: 'Failed to fetch workspaces' });
@@ -77,7 +84,7 @@ export function registerRoutes(app: Express): Server {
       const [workspace] = await db.insert(workspaces).values({
         name: data.name,
         ownerId: userId,
-        settings: data.settings || workspaces.settings.default,
+        settings: data.settings || {},
         metadata: data.metadata || {},
       }).returning();
 
@@ -160,13 +167,13 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Get workspace overview data
+  // Get workspace details
   app.get("/api/workspaces/:id", async (req, res) => {
     try {
       const workspaceId = parseInt(req.params.id);
       const userId = 1; // TODO: Replace with actual user ID from auth
 
-      // Get workspace data with related information
+      // Get workspace data with owner
       const workspace = await db.query.workspaces.findFirst({
         where: eq(workspaces.id, workspaceId),
         with: {
@@ -189,15 +196,13 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: 'Access denied' });
       }
 
-      // Transform data for response
-      const response = {
+      res.json({
         id: workspace.id,
         name: workspace.name,
         stats: {
           members: workspace.members.length,
-          // Note: These will be implemented when we add channels and announcements
-          channels: 0,
-          announcements: 0,
+          channels: 0, // TODO: Add channel count
+          announcements: 0, // TODO: Add announcements count
         },
         owner: {
           id: workspace.owner.id,
@@ -211,9 +216,7 @@ export function registerRoutes(app: Express): Server {
           joinedAt: member.joinedAt,
         })),
         metadata: workspace.metadata,
-      };
-
-      res.json(response);
+      });
     } catch (error) {
       console.error('Error fetching workspace:', error);
       res.status(500).json({ message: 'Failed to fetch workspace details' });

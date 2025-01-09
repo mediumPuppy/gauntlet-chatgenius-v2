@@ -1,6 +1,6 @@
 import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { relations } from "drizzle-orm";
+import { relations, type InferModel } from "drizzle-orm";
 
 // Users and Authentication
 export const users = pgTable("users", {
@@ -144,24 +144,64 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   channelId: integer("channel_id").notNull().references(() => channels.id, { onDelete: 'cascade' }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  rootMessageId: integer("root_message_id").references(() => messages.id, { onDelete: 'cascade' }),
-  parentId: integer("parent_id").references(() => messages.id, { onDelete: 'cascade' }),
-  content: jsonb("content").$type<{
-    blocks: Array<{
-      type: string;
-      content: any;
-      metadata: any;
-    }>;
-    formattedText: string;
-    rawText: string;
-  }>(),
-  aiGenerated: boolean("ai_generated").default(false),
+  content: text("content").notNull(),
   isEdited: boolean("is_edited").default(false),
   editedAt: timestamp("edited_at"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   version: integer("version").notNull().default(1),
 });
+
+// Define relationships
+export const userRelations = relations(users, ({ one, many }) => ({
+  preferences: one(userPreferences, {
+    fields: [users.id],
+    references: [userPreferences.userId],
+  }),
+  ownedWorkspaces: many(workspaces),
+  workspaceMemberships: many(workspaceMembers),
+  messages: many(messages),
+}));
+
+export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
+  owner: one(users, {
+    fields: [workspaces.ownerId],
+    references: [users.id],
+  }),
+  members: many(workspaceMembers),
+  channels: many(channels),
+}));
+
+export const workspaceMemberRelations = relations(workspaceMembers, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [workspaceMembers.workspaceId],
+    references: [workspaces.id],
+  }),
+  user: one(users, {
+    fields: [workspaceMembers.userId],
+    references: [users.id],
+  }),
+}));
+
+export const channelRelations = relations(channels, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [channels.workspaceId],
+    references: [workspaces.id],
+  }),
+  messages: many(messages),
+}));
+
+export const messageRelations = relations(messages, ({ one }) => ({
+  channel: one(channels, {
+    fields: [messages.channelId],
+    references: [channels.id],
+  }),
+  author: one(users, {
+    fields: [messages.userId],
+    references: [users.id],
+  }),
+}));
+
 
 // Files
 export const files = pgTable("files", {
@@ -267,55 +307,6 @@ export const sessions = pgTable("sessions", {
   version: integer("version").notNull().default(1),
 });
 
-// Define relationships
-export const userRelations = relations(users, ({ one, many }) => ({
-  preferences: one(userPreferences, {
-    fields: [users.id],
-    references: [userPreferences.userId],
-  }),
-  ownedWorkspaces: many(workspaces),
-  workspaceMemberships: many(workspaceMembers),
-  messages: many(messages),
-  uploadedFiles: many(files),
-  mentions: many(messageMentions),
-  savedMessages: many(messageSavedBy),
-  sessions: many(sessions),
-}));
-
-export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
-  owner: one(users, {
-    fields: [workspaces.ownerId],
-    references: [users.id],
-  }),
-  members: many(workspaceMembers),
-  channels: many(channels),
-  files: many(files),
-  auditLogs: many(auditLogs),
-}));
-
-export const channelRelations = relations(channels, ({ one, many }) => ({
-  workspace: one(workspaces, {
-    fields: [channels.workspaceId],
-    references: [workspaces.id],
-  }),
-  messages: many(messages),
-}));
-
-export const messageRelations = relations(messages, ({ one, many }) => ({
-  channel: one(channels, {
-    fields: [messages.channelId],
-    references: [channels.id],
-  }),
-  author: one(users, {
-    fields: [messages.userId],
-    references: [users.id],
-  }),
-  mentions: many(messageMentions),
-  files: many(messageFiles),
-  reactions: many(messageReactions),
-  savedBy: many(messageSavedBy),
-}));
-
 // Create Zod schemas for validation
 export const insertUserSchema = createInsertSchema(users);
 export const selectUserSchema = createSelectSchema(users);
@@ -329,13 +320,13 @@ export const insertFileSchema = createInsertSchema(files);
 export const selectFileSchema = createSelectSchema(files);
 
 // Export types
-export type InsertUser = typeof users.$inferInsert;
-export type SelectUser = typeof users.$inferSelect;
-export type InsertWorkspace = typeof workspaces.$inferInsert;
-export type SelectWorkspace = typeof workspaces.$inferSelect;
-export type InsertChannel = typeof channels.$inferInsert;
-export type SelectChannel = typeof channels.$inferSelect;
-export type InsertMessage = typeof messages.$inferInsert;
-export type SelectMessage = typeof messages.$inferSelect;
-export type InsertFile = typeof files.$inferInsert;
-export type SelectFile = typeof files.$inferSelect;
+export type User = InferModel<typeof users>;
+export type NewUser = typeof users.$inferInsert;
+export type Workspace = InferModel<typeof workspaces>;
+export type NewWorkspace = typeof workspaces.$inferInsert;
+export type Channel = InferModel<typeof channels>;
+export type NewChannel = typeof channels.$inferInsert;
+export type Message = InferModel<typeof messages>;
+export type NewMessage = typeof messages.$inferInsert;
+export type File = InferModel<typeof files>;
+export type NewFile = typeof files.$inferInsert;

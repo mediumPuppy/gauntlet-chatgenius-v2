@@ -14,9 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Bell, Moon, Eye, Lock } from "lucide-react";
+import { useTheme } from "@/lib/theme-provider";
 
 interface PreferencesModalProps {
   open?: boolean;
@@ -24,6 +23,8 @@ interface PreferencesModalProps {
 }
 
 export function PreferencesModal({ open, onOpenChange }: PreferencesModalProps) {
+  const { theme, setTheme, fontSize, setFontSize } = useTheme();
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
@@ -66,20 +67,6 @@ export function PreferencesModal({ open, onOpenChange }: PreferencesModalProps) 
             </div>
 
             <div className="space-y-4">
-              <h4 className="text-sm font-medium">Mobile Notifications</h4>
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="mobile-notifications">Enable notifications</Label>
-                  <Switch id="mobile-notifications" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="mobile-sound">Notification sound</Label>
-                  <Switch id="mobile-sound" />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-4">
               <h4 className="text-sm font-medium">Email Notifications</h4>
               <div className="flex items-center justify-between">
                 <Label htmlFor="email-digest">Email digest frequency</Label>
@@ -101,7 +88,7 @@ export function PreferencesModal({ open, onOpenChange }: PreferencesModalProps) 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="theme-mode">Theme Mode</Label>
-                <Select>
+                <Select value={theme} onValueChange={(value) => setTheme(value as "light" | "dark" | "system")}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select theme" />
                   </SelectTrigger>
@@ -114,7 +101,7 @@ export function PreferencesModal({ open, onOpenChange }: PreferencesModalProps) 
               </div>
               <div className="flex items-center justify-between">
                 <Label htmlFor="font-size">Font Size</Label>
-                <Select>
+                <Select value={fontSize} onValueChange={(value) => setFontSize(value as "small" | "medium" | "large")}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select size" />
                   </SelectTrigger>

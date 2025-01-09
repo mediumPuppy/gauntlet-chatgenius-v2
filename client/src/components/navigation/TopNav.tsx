@@ -18,9 +18,11 @@ import {
   Circle,
   Clock,
   BellOff,
+  Monitor,
 } from "lucide-react";
 import { UserProfileModal } from "@/components/user/UserProfileModal";
 import { PreferencesModal } from "@/components/user/PreferencesModal";
+import { useTheme } from "@/lib/theme-provider";
 
 const mockUser = {
   displayName: "John Doe",
@@ -41,11 +43,10 @@ const statusOptions = [
 export function TopNav() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPreferencesModal, setShowPreferencesModal] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
-    setTheme(theme === "light" ? "dark" : "light");
-    // TODO: Implement actual theme toggling
+    setTheme(theme === "light" ? "dark" : theme === "dark" ? "system" : "light");
   };
 
   return (
@@ -57,9 +58,13 @@ export function TopNav() {
           </div>
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-              <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              <span className="sr-only">Toggle theme</span>
+              {theme === "light" ? (
+                <Sun className="h-5 w-5" />
+              ) : theme === "dark" ? (
+                <Moon className="h-5 w-5" />
+              ) : (
+                <Monitor className="h-5 w-5" />
+              )}
             </Button>
 
             <DropdownMenu>

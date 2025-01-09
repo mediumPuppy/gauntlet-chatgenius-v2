@@ -17,26 +17,53 @@ const mockNotifications = [
     unread: true, 
     message: "New message in #general",
     time: "5m ago",
-    type: "message"
+    type: "message",
+    details: {
+      channelId: "3",
+      messageId: "123"
+    }
   },
   { 
     id: 2, 
     unread: false, 
     message: "Jane Smith mentioned you",
     time: "10m ago",
-    type: "mention"
+    type: "mention",
+    details: {
+      channelId: "4",
+      messageId: "456",
+      userId: "user-123"
+    }
   },
   {
     id: 3,
     unread: true,
     message: "New thread reply in #team-updates",
     time: "15m ago",
-    type: "thread"
+    type: "thread",
+    details: {
+      channelId: "5",
+      threadId: "789"
+    }
   }
 ];
 
 export function NotificationSection() {
   const unreadCount = mockNotifications.filter(n => n.unread).length;
+
+  const handleNotificationClick = (notification: typeof mockNotifications[0]) => {
+    switch (notification.type) {
+      case 'message':
+        console.log(`Opening message ${notification.details.messageId} in channel ${notification.details.channelId}`);
+        break;
+      case 'mention':
+        console.log(`Opening mention from user ${notification.details.userId} in message ${notification.details.messageId}`);
+        break;
+      case 'thread':
+        console.log(`Opening thread ${notification.details.threadId} in channel ${notification.details.channelId}`);
+        break;
+    }
+  };
 
   return (
     <div className="py-2 px-2">
@@ -72,10 +99,11 @@ export function NotificationSection() {
           <ScrollArea className="h-full mt-4">
             <div className="space-y-4">
               {mockNotifications.map((notification) => (
-                <div
+                <button
                   key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "p-4 rounded-lg transition-colors",
+                    "w-full text-left p-4 rounded-lg transition-colors",
                     notification.unread 
                       ? "bg-muted/50 hover:bg-muted/70" 
                       : "hover:bg-muted/30"
@@ -95,7 +123,7 @@ export function NotificationSection() {
                       </p>
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           </ScrollArea>

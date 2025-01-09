@@ -7,8 +7,15 @@ import { useParams, useLocation } from "wouter";
 import MemberManageModal from "@/components/workspace/MemberManageModal";
 import { useState } from "react";
 
+interface Member {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 // Mock data for demonstration
-const mockMembers = [
+const initialMembers = [
   { id: 1, name: "John Doe", email: "john@example.com", role: "Admin" },
   { id: 2, name: "Jane Smith", email: "jane@example.com", role: "Member" },
   { id: 3, name: "Alex Johnson", email: "alex@example.com", role: "Member" },
@@ -17,12 +24,21 @@ const mockMembers = [
 export default function AdminPanel() {
   const { workspaceId } = useParams();
   const [, navigate] = useLocation();
-  const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [showManageModal, setShowManageModal] = useState(false);
+  const [members, setMembers] = useState<Member[]>(initialMembers);
 
-  const handleManageMember = (member) => {
+  const handleManageMember = (member: Member) => {
     setSelectedMember(member);
     setShowManageModal(true);
+  };
+
+  const handleRoleChange = (memberId: number, newRole: string) => {
+    setMembers(prevMembers =>
+      prevMembers.map(member =>
+        member.id === memberId ? { ...member, role: newRole } : member
+      )
+    );
   };
 
   return (
@@ -80,7 +96,7 @@ export default function AdminPanel() {
                 <div className="border rounded-lg p-4">
                   <h3 className="text-lg font-medium mb-4">Current Members</h3>
                   <div className="space-y-4">
-                    {mockMembers.map((member) => (
+                    {members.map((member) => (
                       <div key={member.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                         <div>
                           <p className="font-medium">{member.name}</p>
@@ -164,6 +180,7 @@ export default function AdminPanel() {
           setShowManageModal(false);
           setSelectedMember(null);
         }}
+        onRoleChange={handleRoleChange}
       />
     </div>
   );

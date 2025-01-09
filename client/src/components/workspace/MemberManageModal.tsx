@@ -38,12 +38,14 @@ interface MemberManageModalProps {
   member: Member | null;
   isOpen: boolean;
   onClose: () => void;
+  onRoleChange?: (memberId: number, newRole: string) => void;
 }
 
 export default function MemberManageModal({
   member,
   isOpen,
   onClose,
+  onRoleChange,
 }: MemberManageModalProps) {
   const [role, setRole] = useState(member?.role || "Member");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,8 +53,10 @@ export default function MemberManageModal({
 
   const handleRoleChange = async () => {
     setIsSubmitting(true);
-    // TODO: Implement role change API call
-    console.log(`Changing role for ${member?.name} to ${role}`);
+    // Call the parent component's handler
+    if (member && onRoleChange) {
+      onRoleChange(member.id, role);
+    }
     setIsSubmitting(false);
     onClose();
   };
@@ -133,14 +137,18 @@ export default function MemberManageModal({
       <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remove Member</AlertDialogTitle>
+            <AlertDialogTitle className="text-destructive">Remove Member</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to remove {member.name} from the workspace? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmRemoveMember} disabled={isSubmitting}>
+            <AlertDialogAction 
+              onClick={confirmRemoveMember} 
+              disabled={isSubmitting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               Remove Member
             </AlertDialogAction>
           </AlertDialogFooter>

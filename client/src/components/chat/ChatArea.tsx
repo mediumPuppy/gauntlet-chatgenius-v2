@@ -188,17 +188,14 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       </div>
 
       {/* Main Content Area with Messages and Thread */}
-      <div className="flex-1 flex">
+      <div className="flex-1">
         {/* Messages Area */}
-        <ScrollArea className={cn(
-          "flex-1 p-4",
-          activeThread && "border-r"
-        )}>
+        <ScrollArea className="h-full p-4">
           <div className="space-y-4">
             {messages.map((message) => (
-              <ContextMenu>
+              <ContextMenu key={message.id}>
                 <ContextMenuTrigger>
-                  <div key={message.id} className="group">
+                  <div className="group">
                     <div className="flex items-start gap-3 hover:bg-muted/50 p-2 rounded-lg">
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                         {message.user.name.charAt(0)}
@@ -226,21 +223,76 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                             ))}
                           </div>
 
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className={cn(
-                              "text-xs gap-1",
-                              message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
-                            )}
-                            onClick={() => handleThreadClick(message.id)}
-                          >
-                            <MessageSquare className="w-4 h-4" />
-                            {message.threadCount > 0 
-                              ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
-                              : 'Reply in thread'
-                            }
-                          </Button>
+                          <Sheet open={activeThread === message.id} onOpenChange={(open) => {
+                            if (!open) setActiveThread(null);
+                            else setActiveThread(message.id);
+                          }}>
+                            <SheetTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className={cn(
+                                  "text-xs gap-1",
+                                  message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
+                                )}
+                              >
+                                <MessageSquare className="w-4 h-4" />
+                                {message.threadCount > 0 
+                                  ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
+                                  : 'Reply in thread'
+                                }
+                              </Button>
+                            </SheetTrigger>
+                            <SheetContent>
+                              <SheetHeader>
+                                <SheetTitle>Thread</SheetTitle>
+                              </SheetHeader>
+
+                              {/* Original Message */}
+                              <div className="mt-4 p-4 border-b bg-muted/30 rounded-lg">
+                                <div className="flex items-start gap-3">
+                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
+                                    {message.user.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-semibold text-sm">{message.user.name}</span>
+                                      <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                                    </div>
+                                    <p className="text-sm mt-1">{message.content}</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Thread Replies */}
+                              <ScrollArea className="flex-1 mt-4">
+                                <div className="space-y-4">
+                                  {message.thread.map((reply: any) => (
+                                    <div key={reply.id} className="flex items-start gap-3">
+                                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
+                                        {reply.user.name.charAt(0)}
+                                      </div>
+                                      <div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="font-semibold text-sm">{reply.user.name}</span>
+                                          <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
+                                        </div>
+                                        <p className="text-sm mt-1">{reply.content}</p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </ScrollArea>
+
+                              {/* Thread Input */}
+                              <div className="mt-4">
+                                <MessageInput 
+                                  channelId={channelId} 
+                                  channelName={`Thread in ${channel.name}`}
+                                />
+                              </div>
+                            </SheetContent>
+                          </Sheet>
                         </div>
                       </div>
                     </div>
@@ -268,67 +320,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             </div>
           )}
         </ScrollArea>
-
-        {/* Thread Panel */}
-        {activeThread && activeThreadMessage && (
-          <div className="w-96 flex flex-col border-l">
-            {/* Thread Header */}
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold">Thread</h3>
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => setActiveThread(null)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-
-            {/* Original Message */}
-            <div className="p-4 border-b bg-muted/30">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                  {activeThreadMessage.user.name.charAt(0)}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm">{activeThreadMessage.user.name}</span>
-                    <span className="text-xs text-muted-foreground">{activeThreadMessage.timestamp}</span>
-                  </div>
-                  <p className="text-sm mt-1">{activeThreadMessage.content}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Thread Replies */}
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {activeThreadMessage.thread.map((reply: any) => (
-                  <div key={reply.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                      {reply.user.name.charAt(0)}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{reply.user.name}</span>
-                        <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
-                      </div>
-                      <p className="text-sm mt-1">{reply.content}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
-            {/* Thread Input */}
-            <div className="p-4 border-t">
-              <MessageInput 
-                channelId={channelId} 
-                channelName={`Thread in ${channel.name}`}
-              />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Message Input */}

@@ -23,11 +23,12 @@ router.get("/api/workspaces/:workspaceId/members", async (req, res) => {
       return res.status(403).json({ message: 'Access denied to this workspace' });
     }
 
-    // Get all members with their user information
+    // Get all members with their user information, filtered by workspace
     const members = await db
       .select({
         id: users.id,
         username: users.username,
+        displayName: users.displayName,
         role: workspaceMembers.role,
       })
       .from(workspaceMembers)
@@ -38,6 +39,7 @@ router.get("/api/workspaces/:workspaceId/members", async (req, res) => {
     const formattedMembers = members.map(member => ({
       id: member.id,
       username: member.username,
+      displayName: member.displayName || member.username,
       role: member.role,
       status: {
         text: "Online", // TODO: Implement real status

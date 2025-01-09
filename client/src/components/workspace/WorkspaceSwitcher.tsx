@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocation } from "wouter";
 
 // Mock data - will be replaced with real data later
 const workspaces = [
@@ -18,14 +19,17 @@ const workspaces = [
 
 interface WorkspaceSwitcherProps {
   activeWorkspaceId?: string;
-  onWorkspaceSelect?: (workspaceId: string) => void;
 }
 
 export default function WorkspaceSwitcher({ 
   activeWorkspaceId = "1",
-  onWorkspaceSelect 
 }: WorkspaceSwitcherProps) {
+  const [, navigate] = useLocation();
   const activeWorkspace = workspaces.find(w => w.id === activeWorkspaceId) || workspaces[0];
+
+  const handleWorkspaceSelect = (workspaceId: string) => {
+    navigate(`/workspace/${workspaceId}`);
+  };
 
   return (
     <DropdownMenu>
@@ -56,7 +60,7 @@ export default function WorkspaceSwitcher({
             <DropdownMenuItem
               key={workspace.id}
               className="p-2 focus:bg-sidebar-accent cursor-pointer"
-              onSelect={() => onWorkspaceSelect?.(workspace.id)}
+              onSelect={() => handleWorkspaceSelect(workspace.id)}
             >
               <div className="flex items-center gap-2">
                 <Avatar className="h-8 w-8">

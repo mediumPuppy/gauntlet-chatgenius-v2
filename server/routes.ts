@@ -3,8 +3,9 @@ import { createServer, type Server } from "http";
 import channelRoutes from "./routes/channels";
 import messageRoutes from "./routes/messages";
 import workspaceRoutes from "./routes/workspaces";
+import { setupWebSocketServer } from "./websocket";
 import { db } from "@db";
-import { workspaces, workspaceMembers, users } from "@db/schema";
+import { workspaces, workspaceMembers, users, type Workspace } from "@db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
@@ -25,11 +26,17 @@ const switchWorkspaceSchema = z.object({
   workspaceId: z.number(),
 });
 
-export function registerRoutes(app: Express): Server {
+export function registerRoutes(app: Express): {httpServer: Server, wsServer: MessageServer} {
   // Register the route handlers
   app.use(channelRoutes);
   app.use(messageRoutes);
   app.use(workspaceRoutes);
+
+  // Create HTTP server
+  const httpServer = createServer(app);
+
+  // Initialize WebSocket server
+  const wsServer = setupWebSocketServer(httpServer);
 
   // Get all workspaces for the current user
   app.get("/api/workspaces", async (req, res) => {
@@ -82,12 +89,14 @@ export function registerRoutes(app: Express): Server {
       const userId = 1; // TODO: Replace with actual user ID from auth
       const data = createWorkspaceSchema.parse(req.body);
 
-      // Create the workspace
+      // Create the workspace with proper type definitions
       const [workspace] = await db.insert(workspaces).values({
         name: data.name,
         ownerId: userId,
-        settings: data.settings || {},
+        settings: data.settings as Workspace['settings'],
         metadata: data.metadata || {},
+        createdAt: new Date(),
+        version: 1
       }).returning();
 
       // Add the creator as an owner
@@ -307,6 +316,5 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  const httpServer = createServer(app);
-  return httpServer;
+  return {httpServer, wsServer};
 }

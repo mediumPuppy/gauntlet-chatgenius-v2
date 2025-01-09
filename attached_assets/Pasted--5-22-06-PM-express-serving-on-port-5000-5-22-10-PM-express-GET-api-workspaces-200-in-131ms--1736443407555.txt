@@ -1,0 +1,106 @@
+
+5:22:06 PM [express] serving on port 5000
+5:22:10 PM [express] GET /api/workspaces 200 in 131ms :: [{"id":1,"name":"Acme Corp","role":"owner",…
+5:22:10 PM [express] GET /api/workspaces/1/channels 200 in 138ms :: [{"id":1,"name":"test-channel","…
+Error fetching workspace members: error: column workspaceMembers_user.display_name does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/routes/workspaces.ts:27:21) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '584',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+5:22:10 PM [express] GET /api/workspaces/1/members 500 in 50ms :: {"message":"Failed to fetch worksp…
+5:22:11 PM [express] GET /api/workspaces 304 in 25ms :: [{"id":1,"name":"Acme Corp","role":"owner","…
+5:22:11 PM [express] GET /api/workspaces 304 in 26ms :: [{"id":1,"name":"Acme Corp","role":"owner","…
+5:22:11 PM [express] GET /api/workspaces/1/channels 304 in 136ms :: [{"id":1,"name":"test-channel","…
+5:22:11 PM [express] GET /api/workspaces/1/channels 200 in 138ms :: [{"id":1,"name":"test-channel","…
+Error fetching workspace members: error: column workspaceMembers_user.display_name does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/routes/workspaces.ts:27:21) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '584',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+5:22:11 PM [express] GET /api/workspaces/1/members 500 in 50ms :: {"message":"Failed to fetch worksp…
+Error fetching workspace members: error: column workspaceMembers_user.display_name does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/routes/workspaces.ts:27:21) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '584',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+5:22:11 PM [express] GET /api/workspaces/1/members 500 in 48ms :: {"message":"Failed to fetch worksp…
+5:22:33 PM [express] GET /api/workspaces 200 in 112ms :: [{"id":1,"name":"Acme Corp","role":"owner",…
+5:22:33 PM [express] GET /api/workspaces/1/channels 304 in 161ms :: [{"id":1,"name":"test-channel","…
+Error fetching workspace members: error: column workspaceMembers_user.display_name does not exist
+    at file:///home/runner/workspace/node_modules/@neondatabase/serverless/index.mjs:1345:74
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NeonPreparedQuery.execute (/home/runner/workspace/node_modules/src/neon-serverless/session.ts:102:18)
+    at async <anonymous> (/home/runner/workspace/server/routes/workspaces.ts:27:21) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '584',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3716',
+  routine: 'errorMissingColumn'
+}
+5:22:33 PM [express] GET /api/workspaces/1/members 500 in 46ms :: {"message":"Failed to fetch worksp…

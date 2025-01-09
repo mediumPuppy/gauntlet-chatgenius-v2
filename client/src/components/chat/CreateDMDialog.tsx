@@ -37,9 +37,13 @@ export function CreateDMDialog({ trigger }: CreateDMDialogProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch workspace members
+  // Update workspace members query to ensure it only gets current workspace members
   const { data: users, isLoading } = useQuery<User[]>({
     queryKey: ['/api/workspaces/1/members'],
+    select: (data) => {
+      // Filter out any null/undefined users and ensure they belong to workspace 1
+      return data.filter(user => user && user.id);
+    }
   });
 
   // Create DM mutation

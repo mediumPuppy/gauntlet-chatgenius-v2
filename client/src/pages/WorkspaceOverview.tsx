@@ -14,9 +14,11 @@ import {
   Puzzle,
   LineChart,
   Pin,
+  ArrowLeft,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocation } from "wouter";
 
 // Mock data - will be replaced with real data
 const workspace = {
@@ -53,8 +55,20 @@ const navigationLinks = [
 ];
 
 export default function WorkspaceOverview() {
+  const [, navigate] = useLocation();
+
   return (
     <div className="container mx-auto py-8 px-4">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        className="mb-6"
+        onClick={() => navigate(`/workspace/${workspace.id}/chat`)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Chat
+      </Button>
+
       {/* Workspace Header */}
       <div className="flex items-center gap-4 mb-8">
         <Avatar className="h-16 w-16">

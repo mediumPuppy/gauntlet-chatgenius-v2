@@ -3,10 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarIcon, Download } from "lucide-react";
+import { Calendar as CalendarIcon, Download, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import { useState } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import {
   LineChart,
   Line,
@@ -53,11 +53,22 @@ const analyticsData = {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 export default function Analytics() {
-  const { workspaceId, channelId } = useParams();
+  const { workspaceId } = useParams();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [, navigate] = useLocation();
 
   return (
     <div className="container mx-auto py-8 px-4">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        className="mb-6"
+        onClick={() => navigate(`/workspace/${workspaceId}/chat`)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Chat
+      </Button>
+
       {/* Header with Date Picker */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold">Analytics</h1>

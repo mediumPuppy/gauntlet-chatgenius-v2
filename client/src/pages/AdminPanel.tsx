@@ -2,8 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Settings, AppWindow, History, UserPlus, Shield } from "lucide-react";
-import { useParams } from "wouter";
+import { Users, Settings, AppWindow, History, UserPlus, Shield, ArrowLeft } from "lucide-react";
+import { useParams, useLocation } from "wouter";
 
 // Mock data for demonstration
 const mockMembers = [
@@ -14,9 +14,20 @@ const mockMembers = [
 
 export default function AdminPanel() {
   const { workspaceId } = useParams();
+  const [, navigate] = useLocation();
 
   return (
     <div className="container mx-auto py-8 px-4">
+      {/* Back Button */}
+      <Button
+        variant="ghost"
+        className="mb-6"
+        onClick={() => navigate(`/workspace/${workspaceId}/chat`)}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back to Chat
+      </Button>
+
       <h1 className="text-3xl font-bold mb-6">Workspace Administration</h1>
 
       <Tabs defaultValue="members" className="w-full">
@@ -82,7 +93,6 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
-
           <TabsContent value="settings">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Workspace Settings</h2>
@@ -100,7 +110,6 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
-
           <TabsContent value="apps">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Apps & Integrations</h2>
@@ -118,7 +127,6 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
-
           <TabsContent value="audit">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Audit Log</h2>

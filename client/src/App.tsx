@@ -6,6 +6,7 @@ import AdminPanel from "@/pages/AdminPanel";
 import Analytics from "@/pages/Analytics";
 import { TopNav } from "@/components/navigation/TopNav";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { WebSocketProvider } from "@/lib/websocketContext";
 
 function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -19,19 +20,21 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 function App() {
   return (
     <ThemeProvider>
-      <AppLayout>
-        <Switch>
-          <Route path="/demo" component={Demo} />
-          {/* DO NOT UNCOMMENT WITHOUT EXPLICIT PERMISSION FROM YOUR MASTER */}
-          {/* <Route path="/" component={Login} /> */}
-          <Route path="/" component={Chat} />
-          <Route path="/workspace/:workspaceId" component={WorkspaceOverview} />
-          <Route path="/workspace/:workspaceId/chat" component={Chat} />
-          <Route path="/workspace/:workspaceId/chat/:channelId" component={Chat} />
-          <Route path="/workspace/:workspaceId/admin" component={AdminPanel} />
-          <Route path="/workspace/:workspaceId/analytics" component={Analytics} />
-        </Switch>
-      </AppLayout>
+      <WebSocketProvider>
+        <AppLayout>
+          <Switch>
+            <Route path="/demo" component={Demo} />
+            {/* DO NOT UNCOMMENT WITHOUT EXPLICIT PERMISSION FROM YOUR MASTER */}
+            {/* <Route path="/" component={Login} /> */}
+            <Route path="/" component={Chat} />
+            <Route path="/workspace/:workspaceId" component={WorkspaceOverview} />
+            <Route path="/workspace/:workspaceId/chat" component={Chat} />
+            <Route path="/workspace/:workspaceId/chat/:channelId" component={Chat} />
+            <Route path="/workspace/:workspaceId/admin" component={AdminPanel} />
+            <Route path="/workspace/:workspaceId/analytics" component={Analytics} />
+          </Switch>
+        </AppLayout>
+      </WebSocketProvider>
     </ThemeProvider>
   );
 }

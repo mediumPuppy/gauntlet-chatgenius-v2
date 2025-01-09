@@ -5,8 +5,9 @@ import Login from "@/pages/Login";
 function App() {
   return (
     <Switch>
-      <Route path="/" component={Login} />
-      <Route path="/workspace" component={Chat} />
+      {/* Temporarily making Chat the default route for development */}
+      <Route path="/" component={Chat} />
+      <Route path="/login" component={Login} />
       <Route path="/workspace/:workspaceId" component={Chat} />
       <Route path="/workspace/:workspaceId/:channelId" component={Chat} />
     </Switch>

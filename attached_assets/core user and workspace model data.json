@@ -1,0 +1,189 @@
+{
+  "users": [
+    {
+      "id": "u-01",
+      "email": "sarah@example.com",
+      "auth0Id": "auth0|123456",
+      "username": "sarah",
+      "displayName": "Sarah Chen",
+      "avatar": "https://example.com/avatars/sarah.jpg",
+      "status": {
+        "text": "Working on the new feature",
+        "emoji": "💻",
+        "expiresAt": "2025-01-09T08:00:00Z"
+      },
+      "isBot": false,
+      "twoFactorEnabled": true,
+      "twoFactorMethod": "authenticator",
+      "lastActive": "2025-01-08T15:30:00Z",
+      "metadata": {
+        "timezone": "America/Los_Angeles",
+        "locale": "en-US"
+      },
+      "createdAt": "2024-12-01T00:00:00Z",
+      "updatedAt": "2025-01-08T15:30:00Z",
+      "version": 1
+    },
+    {
+      "id": "u-02",
+      "email": "alex@example.com",
+      "auth0Id": "auth0|789012",
+      "username": "alex",
+      "displayName": "Alex Kim",
+      "avatar": "https://example.com/avatars/alex.jpg",
+      "status": {
+        "text": "In a meeting",
+        "emoji": "🤝",
+        "expiresAt": "2025-01-08T16:00:00Z"
+      },
+      "isBot": false,
+      "twoFactorEnabled": true,
+      "twoFactorMethod": "sms",
+      "lastActive": "2025-01-08T15:29:00Z",
+      "metadata": {
+        "timezone": "Europe/London",
+        "locale": "en-GB"
+      },
+      "createdAt": "2024-12-01T00:00:00Z",
+      "updatedAt": "2025-01-08T15:29:00Z",
+      "version": 1
+    }
+  ],
+
+  "userPreferences": [
+    {
+      "id": "up-01",
+      "userId": "u-01",
+      "notifications": {
+        "desktop": {
+          "enabled": true,
+          "sound": true,
+          "mentions": true,
+          "messages": false,
+          "quietHours": {
+            "enabled": true,
+            "start": "22:00",
+            "end": "07:00",
+            "timezone": "America/Los_Angeles"
+          }
+        },
+        "mobile": {
+          "enabled": true,
+          "sound": true,
+          "mentions": true,
+          "messages": true,
+          "quietHours": {
+            "enabled": true,
+            "start": "22:00",
+            "end": "07:00",
+            "timezone": "America/Los_Angeles"
+          }
+        },
+        "email": {
+          "enabled": true,
+          "digest": "daily"
+        }
+      },
+      "theme": {
+        "mode": "dark",
+        "customColors": {
+          "primary": "#007AFF",
+          "secondary": "#5856D6"
+        },
+        "fontSize": "medium",
+        "compact": false
+      },
+      "accessibility": {
+        "fontSize": "large",
+        "contrast": "normal",
+        "reducedMotion": false,
+        "screenReader": false,
+        "keyboardShortcuts": {
+          "sendMessage": "ctrl+enter",
+          "newLine": "shift+enter"
+        }
+      },
+      "privacy": {
+        "allowDmsFrom": "team",
+        "blockedUsers": [],
+        "lastActiveVisible": true,
+        "readReceipts": true
+      },
+      "version": 1
+    }
+  ],
+
+  "workspaces": [
+    {
+      "id": "w-01",
+      "name": "Acme Corp",
+      "ownerId": "u-01",
+      "settings": {
+        "defaultChannelPermissions": {
+          "canInvite": true,
+          "canPost": true,
+          "canUploadFiles": true
+        },
+        "defaultMemberPermissions": {
+          "canCreateChannels": true,
+          "canManageIntegrations": false
+        },
+        "fileRetention": {
+          "policy": "delete",
+          "duration": 90
+        },
+        "messageRetention": {
+          "policy": "keep",
+          "duration": null
+        },
+        "allowedAuthMethods": ["password", "google"],
+        "allowedIntegrations": ["github", "jira"]
+      },
+      "metadata": {
+        "industry": "technology",
+        "size": "50-100"
+      },
+      "createdAt": "2024-12-01T00:00:00Z",
+      "version": 1
+    }
+  ],
+
+  "workspaceMembers": [
+    {
+      "id": "wm-01",
+      "workspaceId": "w-01",
+      "userId": "u-01",
+      "role": "owner",
+      "permissions": {
+        "canManageUsers": true,
+        "canManageBilling": true,
+        "canConfigureWorkspace": true
+      },
+      "joinedAt": "2024-12-01T00:00:00Z",
+      "invitedBy": null,
+      "metadata": {
+        "department": "Engineering",
+        "title": "Lead Engineer"
+      },
+      "version": 1
+    },
+    {
+      "id": "wm-02",
+      "workspaceId": "w-01",
+      "userId": "u-02",
+      "role": "member",
+      "permissions": {
+        "canManageUsers": false,
+        "canManageBilling": false,
+        "canConfigureWorkspace": false
+      },
+      "joinedAt": "2024-12-02T00:00:00Z",
+      "invitedBy": "u-01",
+      "metadata": {
+        "department": "Design",
+        "title": "Senior Designer"
+      },
+      "version": 1
+    }
+  ]
+}

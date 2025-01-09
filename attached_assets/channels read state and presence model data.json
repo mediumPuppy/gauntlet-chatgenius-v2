@@ -1,0 +1,193 @@
+{
+  "channels": [
+    {
+      "id": "ch-01",
+      "workspaceId": "w-01",
+      "type": "public",
+      "name": "general",
+      "topic": "General discussion for the whole team",
+      "createdBy": "u-01",
+      "members": [
+        {
+          "userId": "u-01",
+          "role": "owner",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-01T00:00:00Z"
+        },
+        {
+          "userId": "u-02",
+          "role": "member",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-02T00:00:00Z"
+        }
+      ],
+      "settings": {
+        "retention": {
+          "type": "inherit",
+          "days": null
+        },
+        "defaultNotifications": "all_messages",
+        "allowThreads": true,
+        "allowUploads": true,
+        "allowIntegrations": true,
+        "allowBots": true
+      },
+      "isPrivate": false,
+      "isDm": false,
+      "dmMembers": [],
+      "archivedAt": null,
+      "archivedBy": null,
+      "metadata": {
+        "defaultChannel": true,
+        "cannotLeave": true
+      },
+      "createdAt": "2024-12-01T00:00:00Z",
+      "version": 1
+    },
+    {
+      "id": "ch-02",
+      "workspaceId": "w-01",
+      "type": "private",
+      "name": "project-x",
+      "topic": "Confidential: Project X planning and discussion",
+      "createdBy": "u-01",
+      "members": [
+        {
+          "userId": "u-01",
+          "role": "owner",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-05T00:00:00Z"
+        },
+        {
+          "userId": "u-02",
+          "role": "member",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-05T00:10:00Z"
+        }
+      ],
+      "settings": {
+        "retention": {
+          "type": "custom",
+          "days": 365
+        },
+        "defaultNotifications": "all_messages",
+        "allowThreads": true,
+        "allowUploads": true,
+        "allowIntegrations": false,
+        "allowBots": false
+      },
+      "isPrivate": true,
+      "isDm": false,
+      "dmMembers": [],
+      "archivedAt": null,
+      "archivedBy": null,
+      "metadata": {
+        "sensitivity": "confidential",
+        "projectId": "px-001"
+      },
+      "createdAt": "2024-12-05T00:00:00Z",
+      "version": 1
+    },
+    {
+      "id": "ch-03",
+      "workspaceId": "w-01",
+      "type": "dm",
+      "name": null,
+      "topic": null,
+      "createdBy": "u-01",
+      "members": [
+        {
+          "userId": "u-01",
+          "role": "member",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-03T15:00:00Z"
+        },
+        {
+          "userId": "u-02",
+          "role": "member",
+          "addedBy": "u-01",
+          "addedAt": "2024-12-03T15:00:00Z"
+        }
+      ],
+      "settings": {
+        "retention": {
+          "type": "inherit",
+          "days": null
+        },
+        "defaultNotifications": "all_messages",
+        "allowThreads": true,
+        "allowUploads": true,
+        "allowIntegrations": false,
+        "allowBots": false
+      },
+      "isPrivate": true,
+      "isDm": true,
+      "dmMembers": ["u-01", "u-02"],
+      "archivedAt": null,
+      "archivedBy": null,
+      "metadata": {},
+      "createdAt": "2024-12-03T15:00:00Z",
+      "version": 1
+    }
+  ],
+  
+  "channelReadState": [
+    {
+      "channelId": "ch-01",
+      "userId": "u-01",
+      "lastReadMessageId": "m-123",
+      "lastReadAt": "2025-01-08T15:30:00Z",
+      "mentionCount": 0,
+      "hasUnread": false,
+      "version": 1
+    },
+    {
+      "channelId": "ch-01",
+      "userId": "u-02",
+      "lastReadMessageId": "m-120",
+      "lastReadAt": "2025-01-08T14:45:00Z",
+      "mentionCount": 2,
+      "hasUnread": true,
+      "version": 1
+    },
+    {
+      "channelId": "ch-02",
+      "userId": "u-01",
+      "lastReadMessageId": "m-045",
+      "lastReadAt": "2025-01-08T15:00:00Z",
+      "mentionCount": 0,
+      "hasUnread": false,
+      "version": 1
+    },
+    {
+      "channelId": "ch-03",
+      "userId": "u-01",
+      "lastReadMessageId": "m-089",
+      "lastReadAt": "2025-01-08T15:25:00Z",
+      "mentionCount": 0,
+      "hasUnread": false,
+      "version": 1
+    }
+  ],
+
+  "presence": [
+    {
+      "id": "pr-01",
+      "userId": "u-01",
+      "channelId": "ch-01",
+      "isTyping": false,
+      "lastActive": "2025-01-08T15:30:00Z",
+      "expiresAt": "2025-01-08T15:35:00Z",
+      "version": 1
+    },
+    {
+      "id": "pr-02",
+      "userId": "u-02",
+      "channelId": "ch-01",
+      "isTyping": true,
+      "lastActive": "2025-01-08T15:29:00Z",
+      "expiresAt": "2025-01-08T15:34:00Z",
+      "version": 1
+    }
+  ]
+}

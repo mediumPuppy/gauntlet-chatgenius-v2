@@ -1,0 +1,214 @@
+{
+  "messages": [
+    {
+      "id": "m-001",
+      "channelId": "ch-01",
+      "userId": "u-01",
+      "rootMessageId": null,
+      "parentId": null,
+      "content": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Hey team! Here's the project update for this week:",
+            "metadata": {}
+          },
+          {
+            "type": "text",
+            "content": "- Frontend UI is 80% complete\n- API integration starting tomorrow\n- Need review on the design system",
+            "metadata": {
+              "format": "markdown"
+            }
+          }
+        ],
+        "formattedText": "Hey team! Here's the project update for this week:\n- Frontend UI is 80% complete\n- API integration starting tomorrow\n- Need review on the design system",
+        "rawText": "Hey team! Here's the project update for this week:\n- Frontend UI is 80% complete\n- API integration starting tomorrow\n- Need review on the design system"
+      },
+      "mentions": [],
+      "files": [],
+      "reactions": [
+        {
+          "emoji": "👍",
+          "userIds": ["u-02"]
+        }
+      ],
+      "savedBy": ["u-02"],
+      "threadMetadata": {
+        "participantCount": 2,
+        "messageCount": 3,
+        "lastReplyAt": "2025-01-08T15:45:00Z",
+        "hasUnread": true
+      },
+      "aiGenerated": false,
+      "isEdited": false,
+      "editedAt": null,
+      "metadata": {},
+      "createdAt": "2025-01-08T15:30:00Z",
+      "version": 1
+    },
+    {
+      "id": "m-002",
+      "channelId": "ch-01",
+      "userId": "u-02",
+      "rootMessageId": "m-001",
+      "parentId": "m-001",
+      "content": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Great progress! When do you need the design review by?",
+            "metadata": {}
+          }
+        ],
+        "formattedText": "Great progress! When do you need the design review by?",
+        "rawText": "Great progress! When do you need the design review by?"
+      },
+      "mentions": [],
+      "files": [],
+      "reactions": [],
+      "savedBy": [],
+      "threadMetadata": null,
+      "aiGenerated": false,
+      "isEdited": false,
+      "editedAt": null,
+      "metadata": {},
+      "createdAt": "2025-01-08T15:35:00Z",
+      "version": 1
+    },
+    {
+      "id": "m-003",
+      "channelId": "ch-01",
+      "userId": "u-01",
+      "rootMessageId": "m-001",
+      "parentId": "m-001",
+      "content": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Hey ",
+            "metadata": {}
+          },
+          {
+            "type": "mention",
+            "content": "@alex",
+            "metadata": {
+              "userId": "u-02",
+              "displayName": "Alex Kim"
+            }
+          },
+          {
+            "type": "text",
+            "content": " could you review it by EOD? We want to start implementation tomorrow.",
+            "metadata": {}
+          }
+        ],
+        "formattedText": "Hey @alex could you review it by EOD? We want to start implementation tomorrow.",
+        "rawText": "Hey @alex could you review it by EOD? We want to start implementation tomorrow."
+      },
+      "mentions": [
+        {
+          "userId": "u-02",
+          "offset": 4,
+          "length": 5
+        }
+      ],
+      "files": [],
+      "reactions": [
+        {
+          "emoji": "👍",
+          "userIds": ["u-02"]
+        }
+      ],
+      "savedBy": [],
+      "threadMetadata": null,
+      "aiGenerated": false,
+      "isEdited": false,
+      "editedAt": null,
+      "metadata": {},
+      "createdAt": "2025-01-08T15:40:00Z",
+      "version": 1
+    },
+    {
+      "id": "m-004",
+      "channelId": "ch-01",
+      "userId": "u-02",
+      "rootMessageId": "m-001",
+      "parentId": "m-001",
+      "content": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Sure thing! I'll take a look right after my current meeting ends at 4.",
+            "metadata": {}
+          }
+        ],
+        "formattedText": "Sure thing! I'll take a look right after my current meeting ends at 4.",
+        "rawText": "Sure thing! I'll take a look right after my current meeting ends at 4."
+      },
+      "mentions": [],
+      "files": [],
+      "reactions": [
+        {
+          "emoji": "🙏",
+          "userIds": ["u-01"]
+        }
+      ],
+      "savedBy": [],
+      "threadMetadata": null,
+      "aiGenerated": false,
+      "isEdited": false,
+      "editedAt": null,
+      "metadata": {},
+      "createdAt": "2025-01-08T15:45:00Z",
+      "version": 1
+    },
+    {
+      "id": "m-005",
+      "channelId": "ch-02",
+      "userId": "u-01",
+      "rootMessageId": null,
+      "parentId": null,
+      "content": {
+        "blocks": [
+          {
+            "type": "text",
+            "content": "Starting a new thread for Project X planning. Here are our key milestones:",
+            "metadata": {}
+          },
+          {
+            "type": "list",
+            "content": [
+              "Phase 1: Requirements gathering (2 weeks)",
+              "Phase 2: Design and architecture (3 weeks)",
+              "Phase 3: Implementation (8 weeks)"
+            ],
+            "metadata": {
+              "format": "bullet"
+            }
+          }
+        ],
+        "formattedText": "Starting a new thread for Project X planning. Here are our key milestones:\n• Phase 1: Requirements gathering (2 weeks)\n• Phase 2: Design and architecture (3 weeks)\n• Phase 3: Implementation (8 weeks)",
+        "rawText": "Starting a new thread for Project X planning. Here are our key milestones:\n- Phase 1: Requirements gathering (2 weeks)\n- Phase 2: Design and architecture (3 weeks)\n- Phase 3: Implementation (8 weeks)"
+      },
+      "mentions": [],
+      "files": [],
+      "reactions": [],
+      "savedBy": ["u-01", "u-02"],
+      "threadMetadata": {
+        "participantCount": 2,
+        "messageCount": 1,
+        "lastReplyAt": null,
+        "hasUnread": false
+      },
+      "aiGenerated": false,
+      "isEdited": false,
+      "editedAt": null,
+      "metadata": {
+        "projectId": "px-001",
+        "milestone": "planning"
+      },
+      "createdAt": "2025-01-08T16:00:00Z",
+      "version": 1
+    }
+  ]
+}

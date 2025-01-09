@@ -1,0 +1,186 @@
+{
+  "files": [
+    {
+      "id": "f-001",
+      "workspaceId": "w-01",
+      "uploaderId": "u-01",
+      "name": "design-system-v2.fig",
+      "type": "application/figma",
+      "size": 2457600,
+      "url": "https://storage.example.com/files/design-system-v2.fig",
+      "thumbnailUrl": "https://storage.example.com/thumbnails/design-system-v2.png",
+      "altText": "Design System V2 Figma File",
+      "preview": {
+        "status": "ready",
+        "urls": {
+          "small": "https://storage.example.com/previews/ds-v2-sm.png",
+          "medium": "https://storage.example.com/previews/ds-v2-md.png",
+          "large": "https://storage.example.com/previews/ds-v2-lg.png"
+        }
+      },
+      "retention": {
+        "policy": "workspace_default",
+        "expiresAt": null
+      },
+      "accessibleBy": {
+        "userIds": ["u-01", "u-02"],
+        "channelIds": ["ch-01", "ch-02"]
+      },
+      "metadata": {
+        "dimensions": {
+          "width": 1920,
+          "height": 1080
+        },
+        "fileType": "design",
+        "lastModified": "2025-01-08T14:30:00Z"
+      },
+      "s3Details": {
+        "bucket": "chatgenius-files-prod",
+        "key": "workspace-w-01/files/design-system-v2.fig",
+        "versionId": "v1",
+        "storageClass": "STANDARD",
+        "presignedUrl": {
+          "url": "https://s3.example.com/presigned/design-system-v2.fig",
+          "expiresAt": "2025-01-08T16:30:00Z"
+        }
+      },
+      "createdAt": "2025-01-08T14:30:00Z",
+      "version": 1
+    },
+    {
+      "id": "f-002",
+      "workspaceId": "w-01",
+      "uploaderId": "u-02",
+      "name": "project-timeline.xlsx",
+      "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "size": 154288,
+      "url": "https://storage.example.com/files/project-timeline.xlsx",
+      "thumbnailUrl": "https://storage.example.com/thumbnails/excel-preview.png",
+      "altText": "Project Timeline Spreadsheet",
+      "preview": {
+        "status": "ready",
+        "urls": {
+          "small": "https://storage.example.com/previews/timeline-sm.png",
+          "medium": "https://storage.example.com/previews/timeline-md.png",
+          "large": "https://storage.example.com/previews/timeline-lg.png"
+        }
+      },
+      "retention": {
+        "policy": "custom",
+        "expiresAt": "2025-04-08T00:00:00Z"
+      },
+      "accessibleBy": {
+        "userIds": [],
+        "channelIds": ["ch-02"]
+      },
+      "metadata": {
+        "sheets": ["Timeline", "Resources", "Budget"],
+        "fileType": "spreadsheet",
+        "lastModified": "2025-01-08T15:45:00Z"
+      },
+      "s3Details": {
+        "bucket": "chatgenius-files-prod",
+        "key": "workspace-w-01/files/project-timeline.xlsx",
+        "versionId": "v1",
+        "storageClass": "STANDARD",
+        "presignedUrl": {
+          "url": "https://s3.example.com/presigned/project-timeline.xlsx",
+          "expiresAt": "2025-01-08T17:45:00Z"
+        }
+      },
+      "createdAt": "2025-01-08T15:45:00Z",
+      "version": 1
+    }
+  ],
+
+  "presence": [
+    {
+      "id": "p-001",
+      "userId": "u-01",
+      "channelId": "ch-01",
+      "isTyping": true,
+      "lastActive": "2025-01-08T16:14:55Z",
+      "expiresAt": "2025-01-08T16:15:25Z",
+      "version": 1
+    },
+    {
+      "id": "p-002",
+      "userId": "u-02",
+      "channelId": "ch-02",
+      "isTyping": false,
+      "lastActive": "2025-01-08T16:14:30Z",
+      "expiresAt": "2025-01-08T16:15:00Z",
+      "version": 1
+    }
+  ],
+
+  "connections": [
+    {
+      "connectionId": "ws-001",
+      "userId": "u-01",
+      "workspaceId": "w-01",
+      "lastSeen": "2025-01-08T16:14:55Z",
+      "connectionDetails": {
+        "wsConnectionId": "Ag6v7_dklsa9f1",
+        "connectionMeta": {
+          "sourceIp": "192.168.1.100",
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+          "lastSeenAt": "2025-01-08T16:14:55Z"
+        },
+        "ecsMetadata": {
+          "serviceId": "chat-ws-1",
+          "taskId": "task-123",
+          "containerName": "websocket-handler"
+        }
+      },
+      "version": 1
+    },
+    {
+      "connectionId": "ws-002",
+      "userId": "u-02",
+      "workspaceId": "w-01",
+      "lastSeen": "2025-01-08T16:14:30Z",
+      "connectionDetails": {
+        "wsConnectionId": "Bg7v8_dlsa9f2",
+        "connectionMeta": {
+          "sourceIp": "192.168.1.101",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "lastSeenAt": "2025-01-08T16:14:30Z"
+        },
+        "ecsMetadata": {
+          "serviceId": "chat-ws-2",
+          "taskId": "task-124",
+          "containerName": "websocket-handler"
+        }
+      },
+      "version": 1
+    }
+  ],
+
+  "messageUpdates": [
+    {
+      "messageId": "m-001",
+      "fileAttachments": [
+        {
+          "fileId": "f-001",
+          "name": "design-system-v2.fig",
+          "type": "application/figma",
+          "size": 2457600,
+          "url": "https://storage.example.com/files/design-system-v2.fig"
+        }
+      ]
+    },
+    {
+      "messageId": "m-005",
+      "fileAttachments": [
+        {
+          "fileId": "f-002",
+          "name": "project-timeline.xlsx",
+          "type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          "size": 154288,
+          "url": "https://storage.example.com/files/project-timeline.xlsx"
+        }
+      ]
+    }
+  ]
+}

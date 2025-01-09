@@ -1,5 +1,5 @@
 import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
-import ChannelList from "@/components/ChannelList";
+import ChannelList from "@/components/chat/ChannelList";
 import ChatArea from "@/components/chat/ChatArea";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
 import UserProfile from "@/components/workspace/UserProfile";
@@ -37,8 +37,9 @@ export default function Chat() {
             <WorkspaceSwitcher />
             <Separator />
             <ScrollArea className="flex-1">
-              <ChannelList
-                workspaceId={params?.workspaceId || ''}
+              <ChannelList 
+                selectedChannel={selectedChannel}
+                onChannelSelect={setSelectedChannel}
               />
             </ScrollArea>
             <Separator />

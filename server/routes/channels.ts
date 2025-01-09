@@ -31,6 +31,11 @@ router.get("/api/workspaces/:workspaceId/channels", async (req, res) => {
     const workspaceId = parseInt(req.params.workspaceId);
     const userId = 1; // TODO: Replace with actual user ID from auth
 
+    console.log('Fetching channels for workspace:', {
+      workspaceId,
+      userId,
+    });
+
     // Verify user is a workspace member
     const membership = await db.query.workspaceMembers.findFirst({
       where: and(
@@ -44,27 +49,43 @@ router.get("/api/workspaces/:workspaceId/channels", async (req, res) => {
     }
 
     // Get all channels in the workspace
-    const channelList = await db.query.channels.findMany({
-      where: eq(channels.workspaceId, workspaceId),
-      with: {
-        messages: {
-          limit: 1,
-          orderBy: desc(messages.createdAt),
-        },
-      },
+    const channelList = await db
+      .select({
+        id: channels.id,
+        name: channels.name,
+        type: channels.type,
+        topic: channels.topic,
+        isPrivate: channels.isPrivate,
+        isDm: channels.isDm,
+        settings: channels.settings,
+        createdAt: channels.createdAt,
+        metadata: channels.metadata,
+      })
+      .from(channels)
+      .where(eq(channels.workspaceId, workspaceId));
+
+    console.log('Channels found:', {
+      workspaceId,
+      channelCount: channelList.length,
+      channels: channelList.map(c => ({ id: c.id, name: c.name }))
     });
 
-    res.json(channelList.map(channel => ({
-      id: channel.id,
-      name: channel.name,
-      type: channel.type,
-      topic: channel.topic,
-      isPrivate: channel.isPrivate,
-      isDm: channel.isDm,
-      settings: channel.settings,
-      lastMessage: channel.messages[0] || null,
-      createdAt: channel.createdAt,
-    })));
+    // For each channel, get the latest message
+    const channelsWithMessages = await Promise.all(
+      channelList.map(async (channel) => {
+        const lastMessage = await db.query.messages.findFirst({
+          where: eq(messages.channelId, channel.id),
+          orderBy: desc(messages.createdAt),
+        });
+
+        return {
+          ...channel,
+          lastMessage: lastMessage || null,
+        };
+      })
+    );
+
+    res.json(channelsWithMessages);
   } catch (error) {
     console.error('Error fetching channels:', error);
     res.status(500).json({ message: 'Failed to fetch channels' });

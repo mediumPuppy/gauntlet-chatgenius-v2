@@ -10,16 +10,12 @@ import {
   Search,
   Info,
   MessageSquare,
-  X,
+  Plus,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -36,6 +32,7 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 
 interface ChatAreaProps {
@@ -114,6 +111,43 @@ const getChannelInfo = (channelId: string) => {
 };
 
 export default function ChatArea({ channelId }: ChatAreaProps) {
+  const { toast } = useToast();
+  const createChannelMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch('/api/workspaces/1/channels', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'test-channel',
+          type: 'text',
+          topic: 'Test channel',
+          isPrivate: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(await response.text());
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Channel created",
+        description: `Created channel ${data.name}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error creating channel",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   const [messages] = useState<any[]>([
     {
       id: "1",
@@ -268,6 +302,19 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                 </div>
               </SheetContent>
             </Sheet>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => createChannelMutation.mutate()}
+              disabled={createChannelMutation.isPending}
+            >
+              {createChannelMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <Plus className="w-4 h-4 mr-2" />
+              )}
+              Create Channel
+            </Button>
           </div>
         </div>
         {showSearch && (

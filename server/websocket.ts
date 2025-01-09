@@ -200,7 +200,13 @@ export class MessageServer {
         userId: ws.userId!,
         content: message.content,
         createdAt: new Date(),
-      }).returning();
+      }).returning({
+        id: messages.id,
+        channelId: messages.channelId,
+        userId: messages.userId,
+        content: messages.content,
+        createdAt: messages.createdAt,
+      });
 
       // Broadcast to all subscribers
       this.broadcastToChannel(message.channelId, {

@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useState } from "react";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -33,6 +34,20 @@ const channels = {
 };
 
 export default function ChannelList({ selectedChannel, onChannelSelect }: ChannelListProps) {
+  // Track expanded state for each section
+  const [expandedSections, setExpandedSections] = useState({
+    starred: true,
+    channels: true,
+    directMessages: true,
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
+
   const handleContextMenu = (action: string, channelId: string) => {
     console.log(`Action: ${action}, Channel: ${channelId}`);
     // Implement context menu actions
@@ -100,19 +115,27 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     title, 
     items, 
     icon, 
+    section,
     showAdd = true,
     showContextMenu = true
   }: { 
     title: string, 
     items: any[], 
     icon: any,
+    section: keyof typeof expandedSections,
     showAdd?: boolean,
     showContextMenu?: boolean
   }) => (
     <div className="space-y-1">
       <div className="flex items-center justify-between p-2 text-sidebar-foreground">
-        <button className="flex items-center gap-1 font-semibold">
-          <ChevronDown className="w-4 h-4" />
+        <button 
+          onClick={() => toggleSection(section)}
+          className="flex items-center gap-1 font-semibold hover:text-sidebar-accent-foreground transition-colors"
+        >
+          <ChevronDown className={cn(
+            "w-4 h-4 transition-transform duration-200",
+            !expandedSections[section] && "transform -rotate-90"
+          )} />
           {title}
         </button>
         {showAdd && (
@@ -121,16 +144,18 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
           </Button>
         )}
       </div>
-      <div className="space-y-1">
-        {items.map((item) => (
-          <ChannelItem 
-            key={item.id} 
-            channel={item} 
-            icon={icon}
-            showContextMenu={showContextMenu}
-          />
-        ))}
-      </div>
+      {expandedSections[section] && (
+        <div className="space-y-1">
+          {items.map((item) => (
+            <ChannelItem 
+              key={item.id} 
+              channel={item} 
+              icon={icon}
+              showContextMenu={showContextMenu}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 
@@ -142,6 +167,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
           title="Starred"
           items={channels.starred}
           icon={Star}
+          section="starred"
           showAdd={false}
         />
       )}
@@ -150,6 +176,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
       <ChannelSection
         title="Channels"
         items={channels.channels}
+        section="channels"
         icon={({ className }) => 
           channels.channels.find(c => c.isPrivate) 
             ? <Lock className={className} />
@@ -161,6 +188,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
       <ChannelSection
         title="Direct Messages"
         items={channels.directMessages}
+        section="directMessages"
         icon={MessageSquare}
         showContextMenu={false}
       />

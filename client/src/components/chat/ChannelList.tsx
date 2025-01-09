@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getStatusColor } from "@/lib/utils";
 import { NotificationSection } from "@/components/notifications/NotificationSection";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -71,11 +71,21 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
   const [showLeaveDialog, setShowLeaveDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
 
+  // Debug logging for workspace changes
+  useEffect(() => {
+    console.log('Workspace ID changed:', workspaceId);
+  }, [workspaceId]);
+
   // Fetch channels from API
   const { data: channels, isLoading: channelsLoading, error: channelsError } = useQuery<Channel[]>({
     queryKey: [`/api/workspaces/${workspaceId}/channels`],
     enabled: !!workspaceId,
   });
+
+  // Debug logging for channels data
+  useEffect(() => {
+    console.log('Channels data:', channels);
+  }, [channels]);
 
   // Fetch workspace members to check admin status
   const { data: workspaceMembers, isLoading: membersLoading } = useQuery<WorkspaceMember[]>({
@@ -149,6 +159,9 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     }
     return acc;
   }, { channels: [] as Channel[], directMessages: [] as Channel[] }) ?? { channels: [], directMessages: [] };
+
+  // Debug logging for grouped channels
+  console.log('Grouped channels:', groupedChannels);
 
   const handleContextMenu = (action: string, channelId: string) => {
     const channel = channels?.find(c => c.id.toString() === channelId);

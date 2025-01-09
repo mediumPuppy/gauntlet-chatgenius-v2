@@ -2,7 +2,6 @@ import { ResizablePanelGroup, ResizablePanel } from "@/components/ui/resizable";
 import ChannelList from "@/components/chat/ChannelList";
 import ChatArea from "@/components/chat/ChatArea";
 import WorkspaceSwitcher from "@/components/workspace/WorkspaceSwitcher";
-import UserProfile from "@/components/workspace/UserProfile";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useState, useEffect } from "react";
@@ -29,11 +28,11 @@ export default function Chat() {
   }, [location]);
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-[calc(100vh-theme(spacing.14))]">
       <ResizablePanelGroup direction="horizontal">
         {/* Workspace & Channel Sidebar */}
         <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
-          <div className="h-screen flex flex-col bg-sidebar">
+          <div className="h-full flex flex-col bg-sidebar">
             <WorkspaceSwitcher />
             <Separator />
             <ScrollArea className="flex-1">
@@ -42,8 +41,6 @@ export default function Chat() {
                 onChannelSelect={setSelectedChannel}
               />
             </ScrollArea>
-            <Separator />
-            <UserProfile />
           </div>
         </ResizablePanel>
 

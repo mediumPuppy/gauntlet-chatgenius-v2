@@ -169,14 +169,14 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   if (!channelId || !channel) {
     return (
-      <div className="h-screen flex items-center justify-center text-muted-foreground">
+      <div className="h-full flex items-center justify-center text-muted-foreground">
         Select a channel to start chatting
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-full flex flex-col">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -281,7 +281,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         )}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 overflow-hidden">
         <ScrollArea className="h-full p-4">
           <div className="space-y-4">
             {messages.map((message) => (

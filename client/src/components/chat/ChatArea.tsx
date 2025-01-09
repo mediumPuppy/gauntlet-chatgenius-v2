@@ -34,6 +34,57 @@ interface ChatAreaProps {
   channelId: string | null;
 }
 
+// This is just for the getChannelInfo function, will be replaced with real data later
+const channels = {
+  starred: [
+    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
+    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
+  ],
+  channels: [
+    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
+    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
+    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
+  ],
+  directMessages: [
+    { 
+      id: "6", 
+      name: "Jane Smith", 
+      avatar: "https://example.com/jane.jpg",
+      status: {
+        text: "In a meeting",
+        emoji: "🗣️",
+        lastActive: new Date().toISOString()
+      },
+      isOnline: true,
+      unreadCount: 1 
+    },
+    { 
+      id: "7", 
+      name: "John Doe", 
+      avatar: "https://example.com/john.jpg",
+      status: {
+        text: "Away",
+        emoji: "🌙",
+        lastActive: new Date(Date.now() - 3600000).toISOString()
+      },
+      isOnline: false,
+      unreadCount: 0 
+    },
+    { 
+      id: "8", 
+      name: "Alice Johnson", 
+      avatar: "https://example.com/alice.jpg",
+      status: {
+        text: "Available",
+        emoji: "💻",
+        lastActive: new Date().toISOString()
+      },
+      isOnline: true,
+      unreadCount: 4 
+    }
+  ],
+};
+
 // Mock function to get channel info - will be replaced with real data later
 const getChannelInfo = (channelId: string) => {
   const allChannels = [
@@ -105,10 +156,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     // Will be implemented with real data later
   };
 
-  const handleThreadClick = (messageId: string) => {
-    setActiveThread(activeThread === messageId ? null : messageId);
-  };
-
   if (!channelId || !channel) {
     return (
       <div className="h-screen flex items-center justify-center text-muted-foreground">
@@ -116,10 +163,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       </div>
     );
   }
-
-  const activeThreadMessage = activeThread
-    ? messages.find(m => m.id === activeThread)
-    : null;
 
   return (
     <div className="h-screen flex flex-col">
@@ -129,16 +172,27 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               {channel.isDm ? (
-                <Avatar className="h-8 w-8">
-                  <AvatarImage src={channel.avatar} />
-                  <AvatarFallback>
-                    {channel.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src={channel.avatar} />
+                    <AvatarFallback>
+                      {channel.name.split(' ').map(n => n[0]).join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className={cn(
+                    "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-background",
+                    channel.isOnline ? "bg-green-500" : "bg-gray-500"
+                  )} />
+                </div>
               ) : (
                 <Hash className="w-5 h-5 text-muted-foreground" />
               )}
               <h2 className="font-semibold">{channel.name}</h2>
+              {channel.isDm && channel.status && (
+                <span className="text-xs text-muted-foreground">
+                  {channel.status.text} {channel.status.emoji}
+                </span>
+              )}
               {!channel.isDm && (
                 <div className="text-xs text-muted-foreground">
                   {channel.memberCount} members
@@ -155,16 +209,12 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             >
               <Search className="w-5 h-5" />
             </Button>
-            {!channel.isDm && (
-              <>
-                <Button variant="ghost" size="icon">
-                  <Bot className="w-5 h-5" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Pin className="w-5 h-5" />
-                </Button>
-              </>
-            )}
+            <Button variant="ghost" size="icon">
+              <Bot className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Pin className="w-5 h-5" />
+            </Button>
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -349,22 +399,3 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     </div>
   );
 }
-
-// This is just for the getChannelInfo function, will be replaced with real data later
-const channels = {
-  starred: [
-    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
-    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
-  ],
-  channels: [
-    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
-    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
-    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
-  ],
-  directMessages: [
-    { id: "6", name: "Jane Smith", isOnline: true, unreadCount: 1, avatar: "https://example.com/jane.jpg" }, // Added avatar for testing
-    { id: "7", name: "John Doe", isOnline: false, unreadCount: 0, avatar: "https://example.com/john.jpg" }, // Added avatar for testing
-    { id: "8", name: "Alice Johnson", isOnline: true, unreadCount: 4, avatar: "https://example.com/alice.jpg" }, // Added avatar for testing
-
-  ],
-};

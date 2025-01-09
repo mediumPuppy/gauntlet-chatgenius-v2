@@ -16,7 +16,7 @@ interface ChannelListProps {
   onChannelSelect: (channelId: string) => void;
 }
 
-// Temporary mock data with enhanced structure
+// Temporary mock data with enhanced structure matching schema
 const channels = {
   starred: [
     { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
@@ -28,14 +28,43 @@ const channels = {
     { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
   ],
   directMessages: [
-    { id: "6", name: "Jane Smith", avatar: "https://via.placeholder.com/50", isOnline: true, unreadCount: 1 },
-    { id: "7", name: "John Doe", avatar: "https://via.placeholder.com/50", isOnline: false, unreadCount: 0 },
-    { id: "8", name: "Alice Johnson", avatar: "https://via.placeholder.com/50", isOnline: true, unreadCount: 4 },
+    { 
+      id: "6", 
+      name: "Jane Smith", 
+      avatar: "https://via.placeholder.com/50", 
+      status: { 
+        text: "In a meeting",
+        lastActive: new Date().toISOString()
+      },
+      isOnline: true, 
+      unreadCount: 1 
+    },
+    { 
+      id: "7", 
+      name: "John Doe", 
+      avatar: "https://via.placeholder.com/50", 
+      status: { 
+        text: "Away",
+        lastActive: new Date(Date.now() - 3600000).toISOString()
+      },
+      isOnline: false, 
+      unreadCount: 0 
+    },
+    { 
+      id: "8", 
+      name: "Alice Johnson", 
+      avatar: "https://via.placeholder.com/50", 
+      status: { 
+        text: "Available",
+        lastActive: new Date().toISOString()
+      },
+      isOnline: true, 
+      unreadCount: 4 
+    },
   ],
 };
 
 export default function ChannelList({ selectedChannel, onChannelSelect }: ChannelListProps) {
-  // Track expanded state for each section
   const [expandedSections, setExpandedSections] = useState({
     starred: true,
     channels: true,
@@ -76,12 +105,18 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
         className="flex-1 flex items-center gap-2 text-left"
       >
         {isDm ? (
-          <Avatar className="h-5 w-5">
-            <AvatarImage src={channel.avatar} />
-            <AvatarFallback className="text-xs">
-              {channel.name.split(' ').map((n: string) => n[0]).join('')}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-5 w-5">
+              <AvatarImage src={channel.avatar} />
+              <AvatarFallback className="text-xs">
+                {channel.name.split(' ').map((n: string) => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className={cn(
+              "absolute bottom-0 right-0 w-2 h-2 rounded-full border border-background",
+              channel.isOnline ? "bg-green-500" : "bg-gray-500"
+            )} />
+          </div>
         ) : (
           <Icon className="w-4 h-4" />
         )}

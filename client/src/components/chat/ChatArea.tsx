@@ -28,6 +28,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import EmojiPicker from "./EmojiPicker";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -44,7 +45,8 @@ const getChannelInfo = (channelId: string) => {
   if (channel) {
     return {
       ...channel,
-      topic: "This is the main channel for team discussions and announcements",
+      isDm: Boolean(channels.directMessages.find(dm => dm.id === channelId)),
+      topic: channel.isDm ? "Direct Message" : "This is the main channel for team discussions and announcements",
       memberCount: 24,
       pinnedCount: 5
     };
@@ -121,16 +123,27 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Enhanced Channel Header */}
+      {/* Enhanced Channel/DM Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <Hash className="w-5 h-5 text-muted-foreground" />
+              {channel.isDm ? (
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={channel.avatar} />
+                  <AvatarFallback>
+                    {channel.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+              ) : (
+                <Hash className="w-5 h-5 text-muted-foreground" />
+              )}
               <h2 className="font-semibold">{channel.name}</h2>
-              <div className="text-xs text-muted-foreground">
-                {channel.memberCount} members
-              </div>
+              {!channel.isDm && (
+                <div className="text-xs text-muted-foreground">
+                  {channel.memberCount} members
+                </div>
+              )}
             </div>
             <p className="text-sm text-muted-foreground mt-1">{channel.topic}</p>
           </div>
@@ -142,12 +155,16 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             >
               <Search className="w-5 h-5" />
             </Button>
-            <Button variant="ghost" size="icon">
-              <Bot className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Pin className="w-5 h-5" />
-            </Button>
+            {!channel.isDm && (
+              <>
+                <Button variant="ghost" size="icon">
+                  <Bot className="w-5 h-5" />
+                </Button>
+                <Button variant="ghost" size="icon">
+                  <Pin className="w-5 h-5" />
+                </Button>
+              </>
+            )}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -156,21 +173,25 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>Channel Info</SheetTitle>
+                  <SheetTitle>{channel.isDm ? "Chat Info" : "Channel Info"}</SheetTitle>
                 </SheetHeader>
                 <div className="space-y-4 mt-4">
-                  <div>
-                    <h3 className="font-semibold mb-2">About</h3>
-                    <p className="text-sm text-muted-foreground">{channel.topic}</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">Members</h3>
-                    <p className="text-sm">{channel.memberCount} members</p>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">Pinned Items</h3>
-                    <p className="text-sm">{channel.pinnedCount} pinned messages</p>
-                  </div>
+                  {!channel.isDm && (
+                    <>
+                      <div>
+                        <h3 className="font-semibold mb-2">About</h3>
+                        <p className="text-sm text-muted-foreground">{channel.topic}</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-2">Members</h3>
+                        <p className="text-sm">{channel.memberCount} members</p>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-2">Pinned Items</h3>
+                        <p className="text-sm">{channel.pinnedCount} pinned messages</p>
+                      </div>
+                    </>
+                  )}
                 </div>
               </SheetContent>
             </Sheet>
@@ -181,7 +202,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           <div className="mt-2">
             <input
               type="text"
-              placeholder="Search in channel..."
+              placeholder="Search in chat..."
               className="w-full px-3 py-2 rounded-md border bg-background"
             />
           </div>
@@ -198,9 +219,11 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                 <ContextMenuTrigger>
                   <div className="group">
                     <div className="flex items-start gap-3 hover:bg-muted/50 p-2 rounded-lg">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        {message.user.name.charAt(0)}
-                      </div>
+                      {!channel.isDm && (
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          {message.user.name.charAt(0)}
+                        </div>
+                      )}
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold">{message.user.name}</span>
@@ -339,8 +362,9 @@ const channels = {
     { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
   ],
   directMessages: [
-    { id: "6", name: "Jane Smith", isOnline: true, unreadCount: 1 },
-    { id: "7", name: "John Doe", isOnline: false, unreadCount: 0 },
-    { id: "8", name: "Alice Johnson", isOnline: true, unreadCount: 4 },
+    { id: "6", name: "Jane Smith", isOnline: true, unreadCount: 1, avatar: "https://example.com/jane.jpg" }, // Added avatar for testing
+    { id: "7", name: "John Doe", isOnline: false, unreadCount: 0, avatar: "https://example.com/john.jpg" }, // Added avatar for testing
+    { id: "8", name: "Alice Johnson", isOnline: true, unreadCount: 4, avatar: "https://example.com/alice.jpg" }, // Added avatar for testing
+
   ],
 };

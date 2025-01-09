@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 
 interface ChannelListProps {
@@ -27,9 +28,9 @@ const channels = {
     { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
   ],
   directMessages: [
-    { id: "6", name: "Jane Smith", isOnline: true, unreadCount: 1 },
-    { id: "7", name: "John Doe", isOnline: false, unreadCount: 0 },
-    { id: "8", name: "Alice Johnson", isOnline: true, unreadCount: 4 },
+    { id: "6", name: "Jane Smith", avatar: "https://via.placeholder.com/50", isOnline: true, unreadCount: 1 },
+    { id: "7", name: "John Doe", avatar: "https://via.placeholder.com/50", isOnline: false, unreadCount: 0 },
+    { id: "8", name: "Alice Johnson", avatar: "https://via.placeholder.com/50", isOnline: true, unreadCount: 4 },
   ],
 };
 
@@ -56,11 +57,13 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
   const ChannelItem = ({ 
     channel, 
     icon: Icon, 
-    showContextMenu = true 
+    showContextMenu = true,
+    isDm = false 
   }: { 
     channel: any, 
     icon: any,
-    showContextMenu?: boolean 
+    showContextMenu?: boolean,
+    isDm?: boolean
   }) => (
     <div
       className={cn(
@@ -72,7 +75,16 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
         onClick={() => onChannelSelect(channel.id)}
         className="flex-1 flex items-center gap-2 text-left"
       >
-        <Icon className="w-4 h-4" />
+        {isDm ? (
+          <Avatar className="h-5 w-5">
+            <AvatarImage src={channel.avatar} />
+            <AvatarFallback className="text-xs">
+              {channel.name.split(' ').map((n: string) => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+        ) : (
+          <Icon className="w-4 h-4" />
+        )}
         <span className={cn(channel.unreadCount > 0 && "font-semibold")}>
           {channel.name}
         </span>
@@ -117,14 +129,16 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     icon, 
     section,
     showAdd = true,
-    showContextMenu = true
+    showContextMenu = true,
+    isDm = false
   }: { 
     title: string, 
     items: any[], 
     icon: any,
     section: keyof typeof expandedSections,
     showAdd?: boolean,
-    showContextMenu?: boolean
+    showContextMenu?: boolean,
+    isDm?: boolean
   }) => (
     <div className="space-y-1">
       <div className="flex items-center justify-between p-2 text-sidebar-foreground">
@@ -152,6 +166,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               channel={item} 
               icon={icon}
               showContextMenu={showContextMenu}
+              isDm={isDm}
             />
           ))}
         </div>
@@ -191,6 +206,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
         section="directMessages"
         icon={MessageSquare}
         showContextMenu={false}
+        isDm={true}
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MessageInput from "./MessageInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import { Button } from "@/components/ui/button";
@@ -26,12 +27,17 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { MessageComposer } from '@/components/message/MessageComposer';
+import { MessageComposer } from "@/components/message/MessageComposer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getStatusColor, formatStatus } from "@/lib/utils";
-import data from '@emoji-mart/data';
-import Picker from '@emoji-mart/react';
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import data from "@emoji-mart/data";
+import Picker from "@emoji-mart/react";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -56,10 +62,10 @@ const channels = {
       status: {
         text: "In a meeting",
         emoji: "🗣️",
-        lastActive: new Date().toISOString()
+        lastActive: new Date().toISOString(),
       },
       isOnline: true,
-      unreadCount: 1
+      unreadCount: 1,
     },
     {
       id: "7",
@@ -68,10 +74,10 @@ const channels = {
       status: {
         text: "Away",
         emoji: "🌙",
-        lastActive: new Date(Date.now() - 3600000).toISOString()
+        lastActive: new Date(Date.now() - 3600000).toISOString(),
       },
       isOnline: false,
-      unreadCount: 0
+      unreadCount: 0,
     },
     {
       id: "8",
@@ -80,11 +86,11 @@ const channels = {
       status: {
         text: "Available",
         emoji: "💻",
-        lastActive: new Date().toISOString()
+        lastActive: new Date().toISOString(),
       },
       isOnline: true,
-      unreadCount: 4
-    }
+      unreadCount: 4,
+    },
   ],
 };
 
@@ -93,16 +99,18 @@ const getChannelInfo = (channelId: string) => {
   const allChannels = [
     ...channels.starred,
     ...channels.channels,
-    ...channels.directMessages
+    ...channels.directMessages,
   ];
-  const channel = allChannels.find(c => c.id === channelId);
+  const channel = allChannels.find((c) => c.id === channelId);
   if (channel) {
     return {
       ...channel,
-      isDm: Boolean(channels.directMessages.find(dm => dm.id === channelId)),
-      topic: channel.isDm ? "Direct Message" : "This is the main channel for team discussions and announcements",
+      isDm: Boolean(channels.directMessages.find((dm) => dm.id === channelId)),
+      topic: channel.isDm
+        ? "Direct Message"
+        : "This is the main channel for team discussions and announcements",
       memberCount: 24,
-      pinnedCount: 5
+      pinnedCount: 5,
     };
   }
   return null;
@@ -111,43 +119,41 @@ const getChannelInfo = (channelId: string) => {
 export default function ChatArea({ channelId }: ChatAreaProps) {
   const [messages] = useState<any[]>([
     {
-      id: '1',
-      user: { name: 'John Doe', avatar: '' },
-      content: 'Hello team! Here\'s the latest update on our project.',
-      timestamp: '11:30 AM',
+      id: "1",
+      user: { name: "John Doe", avatar: "" },
+      content: "Hello team! Here's the latest update on our project.",
+      timestamp: "11:30 AM",
       reactions: [
-        { emoji: '👍', count: 3 },
-        { emoji: '🎉', count: 2 }
+        { emoji: "👍", count: 3 },
+        { emoji: "🎉", count: 2 },
       ],
       threadCount: 5,
       thread: [
         {
-          id: 't1',
-          user: { name: 'Alice Johnson', avatar: '' },
-          content: 'Great update! Looking forward to the next phase.',
-          timestamp: '11:35 AM',
-          reactions: []
+          id: "t1",
+          user: { name: "Alice Johnson", avatar: "" },
+          content: "Great update! Looking forward to the next phase.",
+          timestamp: "11:35 AM",
+          reactions: [],
         },
         {
-          id: 't2',
-          user: { name: 'Bob Wilson', avatar: '' },
-          content: 'Can you clarify the timeline?',
-          timestamp: '11:40 AM',
-          reactions: [{ emoji: '👍', count: 1 }]
-        }
-      ]
+          id: "t2",
+          user: { name: "Bob Wilson", avatar: "" },
+          content: "Can you clarify the timeline?",
+          timestamp: "11:40 AM",
+          reactions: [{ emoji: "👍", count: 1 }],
+        },
+      ],
     },
     {
-      id: '2',
-      user: { name: 'Jane Smith', avatar: '' },
-      content: 'Thanks for the update! The progress looks great.',
-      timestamp: '11:32 AM',
-      reactions: [
-        { emoji: '❤️', count: 1 }
-      ],
+      id: "2",
+      user: { name: "Jane Smith", avatar: "" },
+      content: "Thanks for the update! The progress looks great.",
+      timestamp: "11:32 AM",
+      reactions: [{ emoji: "❤️", count: 1 }],
       threadCount: 0,
-      thread: []
-    }
+      thread: [],
+    },
   ]);
 
   const [showSearch, setShowSearch] = useState(false);
@@ -160,8 +166,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
   };
 
   const handleMessageSend = (content: any, files?: any[]) => {
-    console.log('Message sent:', content);
-    console.log('Files:', files);
+    console.log("Message sent:", content);
+    console.log("Files:", files);
     // Will be implemented with real data handling later
   };
 
@@ -185,13 +191,18 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={channel.avatar} />
                     <AvatarFallback>
-                      {channel.name.split(' ').map(n => n[0]).join('')}
+                      {channel.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
-                  <div className={cn(
-                    "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-background",
-                    getStatusColor(channel.status, channel.isOnline)
-                  )} />
+                  <div
+                    className={cn(
+                      "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-background",
+                      getStatusColor(channel.status, channel.isOnline),
+                    )}
+                  />
                 </div>
               ) : (
                 <Hash className="w-5 h-5 text-muted-foreground" />
@@ -208,7 +219,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                 </div>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{channel.topic}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {channel.topic}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -232,14 +245,18 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle>{channel.isDm ? "Chat Info" : "Channel Info"}</SheetTitle>
+                  <SheetTitle>
+                    {channel.isDm ? "Chat Info" : "Channel Info"}
+                  </SheetTitle>
                 </SheetHeader>
                 <div className="space-y-4 mt-4">
                   {!channel.isDm && (
                     <>
                       <div>
                         <h3 className="font-semibold mb-2">About</h3>
-                        <p className="text-sm text-muted-foreground">{channel.topic}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {channel.topic}
+                        </p>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">Members</h3>
@@ -247,7 +264,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                       </div>
                       <div>
                         <h3 className="font-semibold mb-2">Pinned Items</h3>
-                        <p className="text-sm">{channel.pinnedCount} pinned messages</p>
+                        <p className="text-sm">
+                          {channel.pinnedCount} pinned messages
+                        </p>
                       </div>
                     </>
                   )}
@@ -282,7 +301,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                       )}
                       <div className="flex-1 space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold">{message.user.name}</span>
+                          <span className="font-semibold">
+                            {message.user.name}
+                          </span>
                           <span className="text-xs text-muted-foreground">
                             {message.timestamp}
                           </span>
@@ -291,35 +312,41 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex -space-x-1">
-                            {message.reactions.map((reaction: any, i: number) => (
-                              <div
-                                key={i}
-                                className="px-2 py-1 text-xs bg-muted rounded-full flex items-center gap-1"
-                              >
-                                <span>{reaction.emoji}</span>
-                                <span>{reaction.count}</span>
-                              </div>
-                            ))}
+                            {message.reactions.map(
+                              (reaction: any, i: number) => (
+                                <div
+                                  key={i}
+                                  className="px-2 py-1 text-xs bg-muted rounded-full flex items-center gap-1"
+                                >
+                                  <span>{reaction.emoji}</span>
+                                  <span>{reaction.count}</span>
+                                </div>
+                              ),
+                            )}
                           </div>
 
-                          <Sheet open={activeThread === message.id} onOpenChange={(open) => {
-                            if (!open) setActiveThread(null);
-                            else setActiveThread(message.id);
-                          }}>
+                          <Sheet
+                            open={activeThread === message.id}
+                            onOpenChange={(open) => {
+                              if (!open) setActiveThread(null);
+                              else setActiveThread(message.id);
+                            }}
+                          >
                             <SheetTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 className={cn(
                                   "text-xs gap-1",
-                                  message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
+                                  message.threadCount > 0
+                                    ? "text-primary"
+                                    : "text-muted-foreground",
                                 )}
                               >
                                 <MessageSquare className="w-4 h-4" />
                                 {message.threadCount > 0
-                                  ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
-                                  : 'Reply in thread'
-                                }
+                                  ? `${message.threadCount} ${message.threadCount === 1 ? "reply" : "replies"}`
+                                  : "Reply in thread"}
                               </Button>
                             </SheetTrigger>
                             <SheetContent>
@@ -334,10 +361,16 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                                   </div>
                                   <div>
                                     <div className="flex items-center gap-2">
-                                      <span className="font-semibold text-sm">{message.user.name}</span>
-                                      <span className="text-xs text-muted-foreground">{message.timestamp}</span>
+                                      <span className="font-semibold text-sm">
+                                        {message.user.name}
+                                      </span>
+                                      <span className="text-xs text-muted-foreground">
+                                        {message.timestamp}
+                                      </span>
                                     </div>
-                                    <p className="text-sm mt-1">{message.content}</p>
+                                    <p className="text-sm mt-1">
+                                      {message.content}
+                                    </p>
                                   </div>
                                 </div>
                               </div>
@@ -345,16 +378,25 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                               <ScrollArea className="flex-1 mt-4">
                                 <div className="space-y-4">
                                   {message.thread.map((reply: any) => (
-                                    <div key={reply.id} className="flex items-start gap-3">
+                                    <div
+                                      key={reply.id}
+                                      className="flex items-start gap-3"
+                                    >
                                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
                                         {reply.user.name.charAt(0)}
                                       </div>
                                       <div>
                                         <div className="flex items-center gap-2">
-                                          <span className="font-semibold text-sm">{reply.user.name}</span>
-                                          <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
+                                          <span className="font-semibold text-sm">
+                                            {reply.user.name}
+                                          </span>
+                                          <span className="text-xs text-muted-foreground">
+                                            {reply.timestamp}
+                                          </span>
                                         </div>
-                                        <p className="text-sm mt-1">{reply.content}</p>
+                                        <p className="text-sm mt-1">
+                                          {reply.content}
+                                        </p>
                                       </div>
                                     </div>
                                   ))}
@@ -384,7 +426,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                     <PopoverContent className="w-full p-0" align="start">
                       <Picker
                         data={data}
-                        onEmojiSelect={(emoji: any) => handleReaction(message.id, emoji.native)}
+                        onEmojiSelect={(emoji: any) =>
+                          handleReaction(message.id, emoji.native)
+                        }
                         theme="light"
                         previewPosition="none"
                         skinTonePosition="none"
@@ -398,7 +442,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <Hash className="w-12 h-12 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Welcome to #{channel.name}</h3>
+              <h3 className="text-xl font-semibold mb-2">
+                Welcome to #{channel.name}
+              </h3>
               <p>This is the start of the channel</p>
             </div>
           )}
@@ -406,7 +452,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       </div>
 
       <div className="p-4 border-t">
-        <MessageComposer 
+        <MessageComposer
           onSend={handleMessageSend}
           placeholder={`Message ${channel.name}`}
         />

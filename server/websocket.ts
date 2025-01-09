@@ -13,25 +13,39 @@ declare module 'express-session' {
   }
 }
 
-interface AuthenticatedWebSocket extends WebSocket {
-  userId?: number;
-  channelSubscriptions: Set<number>;
+// AWS API Gateway compatible message structure
+interface WebSocketEvent {
+  requestContext: {
+    routeKey: string;
+    connectionId: string;
+    eventType: 'CONNECT' | 'MESSAGE' | 'DISCONNECT';
+  };
+  body?: string;
 }
 
 interface WebSocketMessage {
-  type: 'message' | 'edit' | 'delete' | 'reaction' | 'typing';
+  action: string;
   channelId: number;
   content?: string;
   messageId?: number;
 }
 
+interface AuthenticatedWebSocket extends WebSocket {
+  userId?: number;
+  connectionId: string;
+  channelSubscriptions: Set<number>;
+  isAlive: boolean;
+}
+
 export class MessageServer {
   private wss: WebSocketServer;
-  private clients: Set<AuthenticatedWebSocket> = new Set();
+  private clients: Map<string, AuthenticatedWebSocket> = new Map();
+  private pingInterval: NodeJS.Timeout;
 
   constructor(server: Server) {
     this.wss = new WebSocketServer({ 
-      noServer: true,  // Important: Let the HTTP server handle upgrade
+      noServer: true,
+      perMessageDeflate: true,
     });
 
     // Handle upgrade for our messaging WebSocket connections
@@ -53,87 +67,171 @@ export class MessageServer {
     });
 
     this.setupWebSocketServer();
+
+    // Setup ping interval for connection health check
+    this.pingInterval = setInterval(() => {
+      this.clients.forEach((client) => {
+        if (!this.isAlive(client)) {
+          return this.handleDisconnect(client);
+        }
+        this.ping(client);
+      });
+    }, 30000);
+  }
+
+  private isAlive(client: AuthenticatedWebSocket): boolean {
+    return client.readyState === WebSocket.OPEN;
+  }
+
+  private ping(client: AuthenticatedWebSocket) {
+    try {
+      client.ping();
+    } catch (error) {
+      console.error('Error sending ping:', error);
+      this.handleDisconnect(client);
+    }
+  }
+
+  private async handleConnect(ws: AuthenticatedWebSocket, req: any) {
+    const connectionId = Math.random().toString(36).substring(2);
+    ws.connectionId = connectionId;
+    ws.userId = (req.session as Session).userId;
+    ws.channelSubscriptions = new Set();
+    ws.isAlive = true;
+
+    this.clients.set(connectionId, ws);
+
+    // Send connection acknowledgment
+    this.sendToClient(ws, {
+      action: '$connect',
+      connectionId,
+      message: 'Connected successfully'
+    });
+  }
+
+  private handleDisconnect(ws: AuthenticatedWebSocket) {
+    this.clients.delete(ws.connectionId);
+    ws.terminate();
   }
 
   private setupWebSocketServer() {
-    this.wss.on('connection', (ws: AuthenticatedWebSocket, req) => {
-      const session = (req as any).session as Session;
-      ws.userId = session.userId;
-      ws.channelSubscriptions = new Set();
-      this.clients.add(ws);
+    this.wss.on('connection', async (ws: AuthenticatedWebSocket, req) => {
+      await this.handleConnect(ws, req);
 
       ws.on('message', async (data: string) => {
         try {
           const message: WebSocketMessage = JSON.parse(data);
-
-          // Validate user has access to the channel
-          const channel = await db.query.channels.findFirst({
-            where: and(
-              eq(channels.id, message.channelId),
-              eq(channels.isPrivate, false)
-            )
-          });
-
-          if (!channel) {
-            ws.send(JSON.stringify({ error: 'Channel not found or access denied' }));
-            return;
-          }
-
-          switch (message.type) {
-            case 'message':
-              if (!message.content) return;
-
-              // Store message in database
-              const newMessages = await db.insert(messages).values({
-                channelId: message.channelId,
-                userId: ws.userId!,
-                content: message.content,
-                createdAt: new Date(),
-              }).returning();
-
-              // Type check the response
-              if (newMessages && Array.isArray(newMessages) && newMessages.length > 0) {
-                const newMessage = newMessages[0];
-                // Broadcast to all subscribers
-                this.broadcastToChannel(message.channelId, {
-                  type: 'message',
-                  channelId: message.channelId,
-                  message: newMessage
-                });
-              }
-              break;
-
-            case 'typing':
-              this.broadcastToChannel(message.channelId, {
-                type: 'typing',
-                channelId: message.channelId,
-                userId: ws.userId
-              });
-              break;
-          }
+          await this.handleMessage(ws, message);
         } catch (error) {
           console.error('Error processing message:', error);
-          ws.send(JSON.stringify({ error: 'Failed to process message' }));
+          this.sendToClient(ws, {
+            action: 'error',
+            message: 'Failed to process message'
+          });
         }
       });
 
-      ws.on('close', () => {
-        this.clients.delete(ws);
+      ws.on('close', () => this.handleDisconnect(ws));
+
+      ws.on('error', (error) => {
+        console.error('WebSocket error:', error);
+        this.handleDisconnect(ws);
+      });
+
+      ws.on('pong', () => {
+        // Update last seen timestamp
+        ws.isAlive = true;
       });
     });
   }
 
+  private async handleMessage(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
+    // Verify channel access
+    const channel = await db.query.channels.findFirst({
+      where: and(
+        eq(channels.id, message.channelId),
+        eq(channels.isPrivate, false)
+      )
+    });
+
+    if (!channel) {
+      return this.sendToClient(ws, {
+        action: 'error',
+        message: 'Channel not found or access denied'
+      });
+    }
+
+    switch (message.action) {
+      case 'message':
+        await this.handleChatMessage(ws, message);
+        break;
+
+      case 'subscribe':
+        await this.handleSubscribe(ws, message.channelId);
+        break;
+
+      case 'unsubscribe':
+        await this.handleUnsubscribe(ws, message.channelId);
+        break;
+
+      case 'typing':
+        this.broadcastToChannel(message.channelId, {
+          action: 'typing',
+          channelId: message.channelId,
+          userId: ws.userId
+        });
+        break;
+
+      default:
+        this.sendToClient(ws, {
+          action: 'error',
+          message: 'Unknown message type'
+        });
+    }
+  }
+
+  private async handleChatMessage(ws: AuthenticatedWebSocket, message: WebSocketMessage) {
+    if (!message.content) return;
+
+    try {
+      // Store message in database
+      const [newMessage] = await db.insert(messages).values({
+        channelId: message.channelId,
+        userId: ws.userId!,
+        content: message.content,
+        createdAt: new Date(),
+      }).returning();
+
+      // Broadcast to all subscribers
+      this.broadcastToChannel(message.channelId, {
+        action: 'message',
+        channelId: message.channelId,
+        message: newMessage
+      });
+    } catch (error) {
+      console.error('Error saving message:', error);
+      this.sendToClient(ws, {
+        action: 'error',
+        message: 'Failed to save message'
+      });
+    }
+  }
+
+  private sendToClient(client: AuthenticatedWebSocket, data: any) {
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(JSON.stringify(data));
+    }
+  }
+
   private broadcastToChannel(channelId: number, data: any) {
-    const message = JSON.stringify(data);
     this.clients.forEach((client) => {
       if (client.channelSubscriptions.has(channelId)) {
-        client.send(message);
+        this.sendToClient(client, data);
       }
     });
   }
 
-  // Subscribe a client to a channel
-  public async subscribeToChannel(ws: AuthenticatedWebSocket, channelId: number) {
+  private async handleSubscribe(ws: AuthenticatedWebSocket, channelId: number) {
     // Verify channel access
     const channel = await db.query.channels.findFirst({
       where: and(
@@ -143,22 +241,37 @@ export class MessageServer {
     });
 
     if (!channel) {
-      ws.send(JSON.stringify({ error: 'Channel not found or access denied' }));
-      return false;
+      return this.sendToClient(ws, {
+        action: 'error',
+        message: 'Channel not found or access denied'
+      });
     }
 
     ws.channelSubscriptions.add(channelId);
-    return true;
+    this.sendToClient(ws, {
+      action: 'subscribed',
+      channelId
+    });
   }
 
-  // Unsubscribe a client from a channel
-  public unsubscribeFromChannel(ws: AuthenticatedWebSocket, channelId: number) {
+  private handleUnsubscribe(ws: AuthenticatedWebSocket, channelId: number) {
     ws.channelSubscriptions.delete(channelId);
+    this.sendToClient(ws, {
+      action: 'unsubscribed',
+      channelId
+    });
   }
 
-  // Get the HTTP server for setting up other WebSocket servers (like Vite HMR)
   public getHttpServer() {
     return this.wss;
+  }
+
+  public cleanup() {
+    clearInterval(this.pingInterval);
+    this.clients.forEach((client) => {
+      client.terminate();
+    });
+    this.clients.clear();
   }
 }
 

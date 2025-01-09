@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import channelRoutes from "./routes/channels";
 import messageRoutes from "./routes/messages";
 import workspaceRoutes from "./routes/workspaces";
-import { setupWebSocketServer } from "./websocket";
+import { setupWebSocketServer, type MessageServer } from "./websocket";
 import { db } from "@db";
 import { workspaces, workspaceMembers, users, type Workspace } from "@db/schema";
 import { eq, and } from "drizzle-orm";
@@ -316,5 +316,5 @@ export function registerRoutes(app: Express): {httpServer: Server, wsServer: Mes
     }
   });
 
-  return {httpServer, wsServer};
+  return { httpServer, wsServer };
 }

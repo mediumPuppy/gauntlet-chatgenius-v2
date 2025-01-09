@@ -1,0 +1,737 @@
+{
+  "models": {
+    "User": {
+      "id": "string",
+      "email": "string",
+      "auth0Id": "string",
+      "username": "string",
+      "displayName": "string",
+      "avatar": "string",
+      "status": {
+        "text": "string",
+        "emoji": "string",
+        "expiresAt": "timestamp"
+      },
+      "isBot": "boolean",
+      "botOwnerId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "twoFactorEnabled": "boolean",
+      "twoFactorMethod": "string",
+      "lastActive": "timestamp",
+      "metadata": "jsonb",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp",
+      "version": "number"
+    },
+
+    "UserPreferences": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "notifications": {
+        "desktop": {
+          "enabled": "boolean",
+          "sound": "boolean",
+          "mentions": "boolean",
+          "messages": "boolean",
+          "quietHours": {
+            "enabled": "boolean",
+            "start": "string",
+            "end": "string",
+            "timezone": "string"
+          }
+        },
+        "mobile": {
+          "enabled": "boolean",
+          "sound": "boolean",
+          "mentions": "boolean",
+          "messages": "boolean",
+          "quietHours": {
+            "enabled": "boolean",
+            "start": "string",
+            "end": "string",
+            "timezone": "string"
+          }
+        },
+        "email": {
+          "enabled": "boolean",
+          "digest": "string"
+        }
+      },
+      "theme": {
+        "mode": "string",
+        "customColors": "jsonb",
+        "fontSize": "string",
+        "compact": "boolean"
+      },
+      "accessibility": {
+        "fontSize": "string",
+        "contrast": "string",
+        "reducedMotion": "boolean",
+        "screenReader": "boolean",
+        "keyboardShortcuts": "jsonb"
+      },
+      "privacy": {
+        "allowDmsFrom": "string",
+        "blockedUsers": [
+          "string"
+        ],
+        "lastActiveVisible": "boolean",
+        "readReceipts": "boolean"
+      },
+      "version": "number"
+    },
+
+    "Workspace": {
+      "id": "string",
+      "name": "string",
+      "ownerId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "RESTRICT"
+      },
+      "settings": {
+        "defaultChannelPermissions": "jsonb",
+        "defaultMemberPermissions": "jsonb",
+        "fileRetention": {
+          "policy": "string",
+          "duration": "number"
+        },
+        "messageRetention": {
+          "policy": "string",
+          "duration": "number"
+        },
+        "allowedAuthMethods": [
+          "string"
+        ],
+        "allowedIntegrations": [
+          "string"
+        ]
+      },
+      "metadata": "jsonb",
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "WorkspaceMember": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "role": "string",
+      "permissions": "jsonb",
+      "joinedAt": "timestamp",
+      "invitedBy": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "metadata": "jsonb",
+      "version": "number"
+    },
+
+    "Channel": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "type": "string",
+      "name": "string",
+      "topic": "string",
+      "createdBy": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "members": [
+        {
+          "userId": {
+            "type": "string",
+            "foreignKey": "User.id",
+            "onDelete": "CASCADE"
+          },
+          "role": "string",
+          "addedBy": {
+            "type": "string",
+            "foreignKey": "User.id",
+            "onDelete": "SET NULL"
+          },
+          "addedAt": "timestamp"
+        }
+      ],
+      "settings": {
+        "retention": {
+          "type": "string",
+          "days": "number"
+        },
+        "defaultNotifications": "string",
+        "allowThreads": "boolean",
+        "allowUploads": "boolean",
+        "allowIntegrations": "boolean",
+        "allowBots": "boolean"
+      },
+      "isPrivate": "boolean",
+      "isDm": "boolean",
+      "dmMembers": [
+        {
+          "type": "string",
+          "foreignKey": "User.id",
+          "onDelete": "CASCADE"
+        }
+      ],
+      "archivedAt": "timestamp",
+      "archivedBy": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "metadata": "jsonb",
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "Message": {
+      "id": "string",
+      "channelId": {
+        "type": "string",
+        "foreignKey": "Channel.id",
+        "onDelete": "CASCADE"
+      },
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "rootMessageId": {
+        "type": "string",
+        "foreignKey": "Message.id",
+        "onDelete": "CASCADE"
+      },
+      "parentId": {
+        "type": "string",
+        "foreignKey": "Message.id",
+        "onDelete": "CASCADE"
+      },
+      "content": {
+        "blocks": [
+          {
+            "type": "string",
+            "content": "jsonb",
+            "metadata": "jsonb"
+          }
+        ],
+        "formattedText": "string",
+        "rawText": "string"
+      },
+      "mentions": [
+        {
+          "userId": {
+            "type": "string",
+            "foreignKey": "User.id",
+            "onDelete": "CASCADE"
+          },
+          "offset": "number",
+          "length": "number"
+        }
+      ],
+      "files": [
+        {
+          "fileId": {
+            "type": "string",
+            "foreignKey": "File.id",
+            "onDelete": "SET NULL"
+          },
+          "name": "string",
+          "type": "string",
+          "size": "number",
+          "url": "string"
+        }
+      ],
+      "reactions": [
+        {
+          "emoji": "string",
+          "userIds": [
+            {
+              "type": "string",
+              "foreignKey": "User.id",
+              "onDelete": "CASCADE"
+            }
+          ]
+        }
+      ],
+      "savedBy": [
+        {
+          "type": "string",
+          "foreignKey": "User.id",
+          "onDelete": "CASCADE"
+        }
+      ],
+      "threadMetadata": {
+        "participantCount": "number",
+        "messageCount": "number",
+        "lastReplyAt": "timestamp",
+        "hasUnread": "boolean"
+      },
+      "aiGenerated": "boolean",
+      "isEdited": "boolean",
+      "editedAt": "timestamp",
+      "metadata": "jsonb",
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "AuditLog": {
+      "id": "string",
+      "actionType": "string",
+      "entityType": "string",
+      "entityId": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "details": "jsonb",
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "File": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "uploaderId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "name": "string",
+      "type": "string",
+      "size": "number",
+      "url": "string",
+      "thumbnailUrl": "string",
+      "altText": "string",
+      "preview": {
+        "status": "string",
+        "urls": {
+          "small": "string",
+          "medium": "string",
+          "large": "string"
+        }
+      },
+      "retention": {
+        "policy": "string",
+        "expiresAt": "timestamp"
+      },
+      "accessibleBy": {
+        "userIds": [
+          {
+            "type": "string",
+            "foreignKey": "User.id",
+            "onDelete": "CASCADE"
+          }
+        ],
+        "channelIds": [
+          {
+            "type": "string",
+            "foreignKey": "Channel.id",
+            "onDelete": "CASCADE"
+          }
+        ]
+      },
+      "metadata": "jsonb",
+      "s3Details": {
+        "bucket": "string",
+        "key": "string",
+        "versionId": "string",
+        "storageClass": "string",
+        "presignedUrl": {
+          "url": "string",
+          "expiresAt": "timestamp"
+        }
+      },
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "SavedItem": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "type": "string",
+      "itemId": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "channelId": {
+        "type": "string",
+        "foreignKey": "Channel.id",
+        "onDelete": "CASCADE"
+      },
+      "savedAt": "timestamp",
+      "notes": "string",
+      "tags": [
+        "string"
+      ],
+      "version": "number"
+    },
+
+    "Session": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "lastActive": "timestamp",
+      "expiresAt": "timestamp",
+      "isCurrent": "boolean",
+      "version": "number"
+    },
+
+    "Connection": {
+      "connectionId": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "lastSeen": "timestamp",
+      "connectionDetails": {
+        "wsConnectionId": "string",
+        "connectionMeta": {
+          "sourceIp": "string",
+          "userAgent": "string",
+          "lastSeenAt": "timestamp"
+        },
+        "ecsMetadata": {
+          "serviceId": "string",
+          "taskId": "string",
+          "containerName": "string"
+        }
+      },
+      "version": "number"
+    },
+
+    "Report": {
+      "id": "string",
+      "reporterId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "targetType": "string",
+      "targetId": "string",
+      "reason": "string",
+      "details": "string",
+      "status": "string",
+      "reviewerId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "reviewedAt": "timestamp",
+      "resolution": "string",
+      "createdAt": "timestamp",
+      "version": "number"
+    },
+
+    "Task": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "channelId": {
+        "type": "string",
+        "foreignKey": "Channel.id",
+        "onDelete": "CASCADE"
+      },
+      "originatingMessageId": {
+        "type": "string",
+        "foreignKey": "Message.id",
+        "onDelete": "SET NULL"
+      },
+      "assignedTo": [
+        {
+          "type": "string",
+          "foreignKey": "User.id",
+          "onDelete": "CASCADE"
+        }
+      ],
+      "title": "string",
+      "status": "string",
+      "dueDate": "timestamp",
+      "createdAt": "timestamp",
+      "updatedAt": "timestamp",
+      "version": "number"
+    },
+
+    "IntegrationSettings": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "integrationType": "string",
+      "oauthInfo": "jsonb",
+      "syncSettings": {
+        "frequency": "string",
+        "lastSyncedAt": "timestamp"
+      },
+      "metadata": "jsonb",
+      "version": "number"
+    },
+
+    "PrivacyConsent": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "policyVersion": "string",
+      "acceptedAt": "timestamp",
+      "revokedAt": "timestamp",
+      "version": "number"
+    },
+
+    "DataDeletionLog": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "SET NULL"
+      },
+      "requestedAt": "timestamp",
+      "completedAt": "timestamp",
+      "status": "string",
+      "description": "string",
+      "version": "number"
+    },
+
+    "WorkspaceAnalytics": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "period": "string",
+      "startDate": "timestamp",
+      "endDate": "timestamp",
+      "metrics": {
+        "activeUsers": "number",
+        "messagesSent": "number",
+        "filesUploaded": "number",
+        "storageUsed": "number",
+        "channelsCreated": "number",
+        "threadParticipation": "number",
+        "botInteractions": "number",
+        "integrationUsage": [
+          {
+            "integrationId": "string",
+            "uses": "number"
+          }
+        ]
+      },
+      "version": "number"
+    },
+
+    "WorkspaceApp": {
+      "id": "string",
+      "workspaceId": {
+        "type": "string",
+        "foreignKey": "Workspace.id",
+        "onDelete": "CASCADE"
+      },
+      "name": "string",
+      "type": "string",
+      "permissions": [
+        "string"
+      ],
+      "webhooks": [
+        {
+          "url": "string",
+          "events": [
+            "string"
+          ],
+          "status": "string"
+        }
+      ],
+      "settings": "jsonb",
+      "usage": {
+        "lastUsed": "timestamp",
+        "totalCalls": "number",
+        "errorCount": "number"
+      },
+      "metadata": "jsonb",
+      "version": "number"
+    },
+
+    "ChannelReadState": {
+      "channelId": {
+        "type": "string",
+        "foreignKey": "Channel.id",
+        "onDelete": "CASCADE"
+      },
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "lastReadMessageId": {
+        "type": "string",
+        "foreignKey": "Message.id",
+        "onDelete": "SET NULL"
+      },
+      "lastReadAt": "timestamp",
+      "mentionCount": "number",
+      "hasUnread": "boolean",
+      "version": "number"
+    },
+
+    "Presence": {
+      "id": "string",
+      "userId": {
+        "type": "string",
+        "foreignKey": "User.id",
+        "onDelete": "CASCADE"
+      },
+      "channelId": {
+        "type": "string",
+        "foreignKey": "Channel.id",
+        "onDelete": "CASCADE"
+      },
+      "isTyping": "boolean",
+      "lastActive": "timestamp",
+      "expiresAt": "timestamp",
+      "version": "number"
+    },
+
+    "TaskQueue": {
+      "id": "string",
+      "taskType": "string",
+      "status": "string",
+      "ecsMetadata": {
+        "cluster": "string",
+        "taskArn": "string",
+        "containerName": "string",
+        "exitCode": "number"
+      },
+      "progress": "number",
+      "error": "string",
+      "startedAt": "timestamp",
+      "completedAt": "timestamp",
+      "retryCount": "number"
+    }
+  },
+
+  "indexes": {
+    "channels_by_workspace": {
+      "table": "Channel",
+      "fields": ["workspaceId", "type"]
+    },
+    "dm_channels": {
+      "table": "Channel",
+      "fields": ["isDm", "dmMembers"]
+    },
+    "messages_by_channel": {
+      "table": "Message",
+      "fields": ["channelId", "createdAt"],
+      "sort": "createdAt DESC"
+    },
+    "messages_by_parent": {
+      "table": "Message",
+      "fields": ["parentId", "createdAt"],
+      "sort": "createdAt ASC"
+    },
+    "channel_read_states": {
+      "table": "ChannelReadState",
+      "fields": ["userId", "channelId"],
+      "unique": true
+    },
+    "apps_by_workspace": {
+      "table": "WorkspaceApp",
+      "fields": ["workspaceId", "type"]
+    },
+    "saved_items_by_user": {
+      "table": "SavedItem",
+      "fields": ["userId", "type"]
+    },
+    "user_preferences": {
+      "table": "UserPreferences",
+      "fields": ["userId"],
+      "unique": true
+    },
+    "active_sessions": {
+      "table": "Session",
+      "fields": ["userId", "isCurrent"]
+    },
+    "analytics_by_period": {
+      "table": "WorkspaceAnalytics",
+      "fields": ["workspaceId", "period", "startDate"]
+    },
+    "reports_by_status": {
+      "table": "Report",
+      "fields": ["status", "createdAt"]
+    },
+    "audit_log_by_time": {
+      "table": "AuditLog",
+      "fields": ["workspaceId", "createdAt"]
+    },
+    "connections_by_user": {
+      "table": "Connection",
+      "fields": ["userId", "workspaceId"],
+      "unique": true
+    },
+    "workspace_members": {
+      "table": "WorkspaceMember",
+      "fields": ["workspaceId", "userId"],
+      "unique": true
+    },
+    "file_access": {
+      "table": "File",
+      "fields": ["workspaceId", "accessibleBy.userIds", "accessibleBy.channelIds"]
+    },
+    "presence_by_user_channel": {
+      "table": "Presence",
+      "fields": ["userId", "channelId"],
+      "unique": false
+    }
+  }
+}

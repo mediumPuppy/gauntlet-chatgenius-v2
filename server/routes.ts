@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import channelRoutes from "./routes/channels";
 import messageRoutes from "./routes/messages";
+import workspaceRoutes from "./routes/workspaces";
 import { db } from "@db";
 import { workspaces, workspaceMembers, users } from "@db/schema";
 import { eq, and } from "drizzle-orm";
@@ -25,9 +26,10 @@ const switchWorkspaceSchema = z.object({
 });
 
 export function registerRoutes(app: Express): Server {
-  // Register the new route handlers
+  // Register the route handlers
   app.use(channelRoutes);
   app.use(messageRoutes);
+  app.use(workspaceRoutes);
 
   // Get all workspaces for the current user
   app.get("/api/workspaces", async (req, res) => {
@@ -150,7 +152,7 @@ export function registerRoutes(app: Express): Server {
       // Store active workspace in session
       req.session.activeWorkspaceId = workspaceId;
 
-      res.json({ 
+      res.json({
         message: 'Successfully switched workspace',
         workspace: {
           id: membership.workspace.id,

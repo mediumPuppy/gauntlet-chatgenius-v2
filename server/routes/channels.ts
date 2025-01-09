@@ -31,6 +31,10 @@ router.get("/api/workspaces/:workspaceId/channels", async (req, res) => {
     const workspaceId = parseInt(req.params.workspaceId);
     const userId = 1; // TODO: Replace with actual user ID from auth
 
+    if (isNaN(workspaceId)) {
+      return res.status(400).json({ message: 'Invalid workspace ID' });
+    }
+
     console.log('Fetching channels for workspace:', {
       workspaceId,
       userId,
@@ -76,6 +80,7 @@ router.get("/api/workspaces/:workspaceId/channels", async (req, res) => {
         const lastMessage = await db.query.messages.findFirst({
           where: eq(messages.channelId, channel.id),
           orderBy: desc(messages.createdAt),
+          limit: 1,
         });
 
         return {

@@ -22,18 +22,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { getStatusColor } from "@/lib/utils";
 import { NotificationSection } from "@/components/notifications/NotificationSection";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { CreateChannelDialog } from "./CreateChannelDialog";
 import { JoinChannelDialog } from "./JoinChannelDialog";
 import { CreateDMDialog } from "./CreateDMDialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChannelListProps {
   selectedChannel: string | null;
   onChannelSelect: (channelId: string) => void;
 }
 
-// Type for channel from API
 interface Channel {
   id: number;
   name: string;
@@ -46,18 +46,36 @@ interface Channel {
   createdAt: string;
 }
 
+interface WorkspaceMember {
+  id: number;
+  role: string;
+  userId: number;
+}
+
 export default function ChannelList({ selectedChannel, onChannelSelect }: ChannelListProps) {
+  const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
     starred: true,
     channels: true,
     directMessages: true,
   });
-  const [showLeaveDialog, setShowLeaveDialog] = useState<{show: boolean, channelId: string, channelName: string} | null>(null);
+  const [showLeaveDialog, setShowLeaveDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
+  const queryClient = useQueryClient();
 
   // Fetch channels from API
   const { data: channels, isLoading, error } = useQuery<Channel[]>({
     queryKey: ['/api/workspaces/1/channels'],
   });
+
+  // Fetch workspace members to check admin status
+  const { data: workspaceMembers } = useQuery<WorkspaceMember[]>({
+    queryKey: ['/api/workspaces/1/members'],
+  });
+
+  const isAdmin = workspaceMembers?.some(
+    member => member.role === 'admin' || member.role === 'owner'
+  );
 
   const toggleSection = (section: keyof typeof expandedSections) => {
     setExpandedSections(prev => ({
@@ -65,6 +83,32 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
       [section]: !prev[section],
     }));
   };
+
+  const deleteChannelMutation = useMutation({
+    mutationFn: async (channelId: string) => {
+      const response = await fetch(`/api/channels/${channelId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete channel');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels'] });
+      setShowDeleteDialog(null);
+      toast({
+        title: "Channel deleted",
+        description: "The channel has been successfully deleted.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error deleting channel",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleContextMenu = (action: string, channelId: string) => {
     switch (action) {
@@ -78,6 +122,22 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
           });
         }
         break;
+      case 'delete':
+        const channelToDelete = channels?.find(c => c.id.toString() === channelId);
+        if (channelToDelete) {
+          setShowDeleteDialog({
+            show: true,
+            channelId,
+            channelName: channelToDelete.name,
+          });
+        }
+        break;
+    }
+  };
+
+  const handleDeleteChannel = () => {
+    if (showDeleteDialog) {
+      deleteChannelMutation.mutate(showDeleteDialog.channelId);
     }
   };
 
@@ -124,6 +184,14 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            {isAdmin && (
+              <DropdownMenuItem 
+                onClick={() => handleContextMenu('delete', channel.id.toString())}
+                className="text-destructive"
+              >
+                Delete channel
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem 
               onClick={() => handleContextMenu('leave', channel.id.toString())}
               className="text-destructive"
@@ -256,6 +324,26 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[100px] px-4"
             >
               Leave Channel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showDeleteDialog?.show} onOpenChange={() => setShowDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Channel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete #{showDeleteDialog?.channelName}? This action cannot be undone and all messages will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex justify-center gap-2 sm:justify-center">
+            <AlertDialogCancel className="mt-0">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteChannel}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-w-[100px] px-4"
+            >
+              Delete Channel
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

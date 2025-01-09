@@ -21,6 +21,10 @@ const updateChannelSchema = z.object({
   settings: z.record(z.unknown()).optional(),
 });
 
+const createDmSchema = z.object({
+  targetUserId: z.number(),
+});
+
 // Get channels for a workspace
 router.get("/api/workspaces/:workspaceId/channels", async (req, res) => {
   try {
@@ -114,7 +118,8 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
   try {
     const workspaceId = parseInt(req.params.workspaceId);
     const userId = 1; // TODO: Replace with actual user ID from auth
-    const { targetUserId } = req.body;
+    const data = createDmSchema.parse(req.body);
+    const { targetUserId } = data;
 
     if (!targetUserId) {
       return res.status(400).json({ message: 'Target user ID is required' });
@@ -135,8 +140,21 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
       return res.status(403).json({ message: 'One or both users are not workspace members' });
     }
 
+    // Get target user info for channel name
+    const [targetUser] = await db
+      .select({
+        id: users.id,
+        username: users.username,
+      })
+      .from(users)
+      .where(eq(users.id, targetUserId));
+
+    if (!targetUser) {
+      return res.status(404).json({ message: 'Target user not found' });
+    }
+
     // Check if DM channel already exists between these users
-    const existingDM = await db
+    const existingDMs = await db
       .select()
       .from(channels)
       .where(
@@ -148,7 +166,7 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
       );
 
     // Find a DM channel that has both users
-    const existingChannel = existingDM.find(channel => {
+    const existingChannel = existingDMs.find(channel => {
       const dmMembers = channel.metadata?.dmMembers;
       return Array.isArray(dmMembers) &&
              dmMembers.includes(userId) &&
@@ -159,23 +177,12 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
       return res.json(existingChannel);
     }
 
-    // Get target user info for channel name
-    const targetUser = await db
-      .select()
-      .from(users)
-      .where(eq(users.id, targetUserId))
-      .limit(1);
-
-    if (!targetUser.length) {
-      return res.status(404).json({ message: 'Target user not found' });
-    }
-
     // Create the DM channel
     const [channel] = await db
       .insert(channels)
       .values({
         workspaceId,
-        name: targetUser[0].username,
+        name: targetUser.username,
         type: 'dm',
         isDm: true,
         isPrivate: true,
@@ -183,7 +190,7 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
           allowThreads: true,
           allowUploads: true,
           allowIntegrations: false,
-          allowBots: false
+          allowBots: false,
         },
         metadata: {
           dmMembers: [userId, targetUserId]
@@ -194,6 +201,9 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
 
     res.status(201).json(channel);
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ message: 'Invalid input data', errors: error.errors });
+    }
     console.error('Error creating DM channel:', error);
     res.status(500).json({ message: 'Failed to create DM channel' });
   }

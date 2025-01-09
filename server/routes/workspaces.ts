@@ -28,14 +28,13 @@ router.get("/api/workspaces/:workspaceId/members", async (req, res) => {
       .select({
         id: users.id,
         username: users.username,
-        email: users.email,
         role: workspaceMembers.role,
       })
       .from(workspaceMembers)
       .innerJoin(users, eq(users.id, workspaceMembers.userId))
       .where(eq(workspaceMembers.workspaceId, workspaceId));
 
-    // Format response
+    // Format response with status
     const formattedMembers = members.map(member => ({
       id: member.id,
       username: member.username,

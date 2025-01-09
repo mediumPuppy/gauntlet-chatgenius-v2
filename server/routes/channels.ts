@@ -121,66 +121,74 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
     }
 
     // Verify both users are workspace members
-    const memberships = await db.query.workspaceMembers.findMany({
-      where: and(
-        eq(workspaceMembers.workspaceId, workspaceId),
-        inArray(workspaceMembers.userId, [userId, targetUserId])
-      ),
-    });
+    const memberships = await db
+      .select()
+      .from(workspaceMembers)
+      .where(
+        and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          inArray(workspaceMembers.userId, [userId, targetUserId])
+        )
+      );
 
     if (memberships.length !== 2) {
       return res.status(403).json({ message: 'One or both users are not workspace members' });
     }
 
     // Check if DM channel already exists between these users
-    const existingDM = await db.query.channels.findFirst({
-      where: and(
-        eq(channels.workspaceId, workspaceId),
-        eq(channels.isDm, true),
-        eq(channels.type, 'dm')
-      ),
+    const existingDM = await db
+      .select()
+      .from(channels)
+      .where(
+        and(
+          eq(channels.workspaceId, workspaceId),
+          eq(channels.isDm, true),
+          eq(channels.type, 'dm')
+        )
+      );
+
+    // Find a DM channel that has both users
+    const existingChannel = existingDM.find(channel => {
+      const dmMembers = channel.metadata?.dmMembers;
+      return Array.isArray(dmMembers) &&
+             dmMembers.includes(userId) &&
+             dmMembers.includes(targetUserId);
     });
 
-    // Check if this is already a DM between these users
-    if (existingDM?.metadata && 
-        Array.isArray(existingDM.metadata.dmMembers) && 
-        existingDM.metadata.dmMembers.includes(userId) && 
-        existingDM.metadata.dmMembers.includes(targetUserId)) {
-      return res.json(existingDM);
+    if (existingChannel) {
+      return res.json(existingChannel);
     }
 
     // Get target user info for channel name
-    const targetUser = await db.query.users.findFirst({
-      where: eq(users.id, targetUserId),
-    });
+    const targetUser = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, targetUserId))
+      .limit(1);
 
-    if (!targetUser) {
+    if (!targetUser.length) {
       return res.status(404).json({ message: 'Target user not found' });
     }
 
     // Create the DM channel
-    const [channel] = await db.insert(channels)
+    const [channel] = await db
+      .insert(channels)
       .values({
         workspaceId,
-        name: targetUser.username,
+        name: targetUser[0].username,
         type: 'dm',
         isDm: true,
         isPrivate: true,
         settings: {
-          retention: {
-            type: 'inherit',
-            days: null
-          },
-          defaultNotifications: 'all_messages',
           allowThreads: true,
           allowUploads: true,
           allowIntegrations: false,
           allowBots: false
         },
-        createdBy: userId,
         metadata: {
           dmMembers: [userId, targetUserId]
-        }
+        },
+        createdBy: userId,
       })
       .returning();
 

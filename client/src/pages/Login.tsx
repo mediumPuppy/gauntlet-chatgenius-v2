@@ -22,6 +22,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Eye, EyeOff } from "lucide-react";
+import TwoFactorModal from "@/components/auth/TwoFactorModal";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -33,6 +35,8 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function Login() {
   const [, navigate] = useLocation();
   const [showPassword, setShowPassword] = useState(false);
+  const [show2FA, setShow2FA] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -43,8 +47,17 @@ export default function Login() {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    // Will implement actual login logic later
-    console.log(data);
+    // Simulate successful login
+    setShow2FA(true);
+  };
+
+  const handle2FAVerify = (code: string) => {
+    setShow2FA(false);
+    setShowOnboarding(true);
+  };
+
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
     navigate("/");
   };
 
@@ -130,6 +143,17 @@ export default function Login() {
           </div>
         </CardFooter>
       </Card>
+
+      <TwoFactorModal
+        isOpen={show2FA}
+        onClose={() => setShow2FA(false)}
+        onVerify={handle2FAVerify}
+      />
+
+      <OnboardingTour
+        isOpen={showOnboarding}
+        onClose={handleOnboardingClose}
+      />
     </div>
   );
 }

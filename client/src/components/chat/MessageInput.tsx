@@ -4,13 +4,14 @@ import { Paperclip, Smile, Bot } from "lucide-react";
 
 interface MessageInputProps {
   channelId: string;
+  channelName: string;
 }
 
-export default function MessageInput({ channelId }: MessageInputProps) {
+export default function MessageInput({ channelId, channelName }: MessageInputProps) {
   return (
     <div className="relative">
       <Textarea
-        placeholder="Message #general"
+        placeholder={`Message ${channelName}`}
         className="min-h-[80px] resize-none pr-20"
       />
       <div className="absolute bottom-2 right-2 flex items-center gap-2">

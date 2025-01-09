@@ -32,7 +32,7 @@ export default function Chat() {
     <div className="h-screen flex flex-col">
       <ResizablePanelGroup direction="horizontal">
         {/* Workspace & Channel Sidebar */}
-        <ResizablePanel defaultSize={20} minSize={15} maxSize={25}>
+        <ResizablePanel defaultSize={25} minSize={20} maxSize={30}>
           <div className="h-screen flex flex-col bg-sidebar">
             <WorkspaceSwitcher />
             <Separator />
@@ -48,7 +48,7 @@ export default function Chat() {
         </ResizablePanel>
 
         {/* Chat Area */}
-        <ResizablePanel defaultSize={80}>
+        <ResizablePanel defaultSize={75}>
           <ChatArea channelId={selectedChannel} />
         </ResizablePanel>
       </ResizablePanelGroup>

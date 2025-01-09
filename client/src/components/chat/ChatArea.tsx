@@ -9,10 +9,21 @@ interface ChatAreaProps {
   channelId: string | null;
 }
 
+// Mock function to get channel info - will be replaced with real data later
+const getChannelInfo = (channelId: string) => {
+  const allChannels = [
+    ...channels.starred,
+    ...channels.channels,
+    ...channels.directMessages
+  ];
+  return allChannels.find(c => c.id === channelId);
+};
+
 export default function ChatArea({ channelId }: ChatAreaProps) {
   const [messages] = useState<any[]>([]); // Will be replaced with real data
+  const channel = channelId ? getChannelInfo(channelId) : null;
 
-  if (!channelId) {
+  if (!channelId || !channel) {
     return (
       <div className="h-screen flex items-center justify-center text-muted-foreground">
         Select a channel to start chatting
@@ -26,7 +37,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Hash className="w-5 h-5 text-muted-foreground" />
-          <h2 className="font-semibold">general</h2>
+          <h2 className="font-semibold">{channel.name}</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon">
@@ -49,7 +60,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Hash className="w-12 h-12 mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Welcome to #general</h3>
+            <h3 className="text-xl font-semibold mb-2">Welcome to #{channel.name}</h3>
             <p>This is the start of the channel</p>
           </div>
         )}
@@ -57,8 +68,26 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
       {/* Message Input */}
       <div className="p-4 border-t">
-        <MessageInput channelId={channelId} />
+        <MessageInput channelId={channelId} channelName={channel.name} />
       </div>
     </div>
   );
 }
+
+// This is just for the getChannelInfo function, will be replaced with real data later
+const channels = {
+  starred: [
+    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
+    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
+  ],
+  channels: [
+    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
+    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
+    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
+  ],
+  directMessages: [
+    { id: "6", name: "Jane Smith", isOnline: true, unreadCount: 1 },
+    { id: "7", name: "John Doe", isOnline: false, unreadCount: 0 },
+    { id: "8", name: "Alice Johnson", isOnline: true, unreadCount: 4 },
+  ],
+};

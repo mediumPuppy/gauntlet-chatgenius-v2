@@ -13,6 +13,7 @@ import { Hash, Lock, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useParams } from "wouter";
 
 interface Channel {
   id: number;
@@ -27,21 +28,20 @@ interface JoinChannelDialogProps {
   trigger?: React.ReactNode;
 }
 
+interface Params {
+  workspaceId?: string;
+}
+
 export function JoinChannelDialog({ trigger }: JoinChannelDialogProps) {
+  const { workspaceId } = useParams<Params>();
   const [searchQuery, setSearchQuery] = useState("");
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: channels, isLoading, error } = useQuery<Channel[]>({
-    queryKey: ['/api/workspaces/1/channels/available'],
-    queryFn: async () => {
-      const response = await fetch('/api/workspaces/1/channels/available');
-      if (!response.ok) {
-        throw new Error('Failed to fetch channels');
-      }
-      return response.json();
-    },
+    queryKey: [`/api/workspaces/${workspaceId}/channels/available`],
+    enabled: !!workspaceId,
   });
 
   const joinChannel = useMutation({
@@ -55,8 +55,8 @@ export function JoinChannelDialog({ trigger }: JoinChannelDialogProps) {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels/available'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/channels`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/channels/available`] });
       toast({
         title: "Channel joined",
         description: "You've successfully joined the channel.",

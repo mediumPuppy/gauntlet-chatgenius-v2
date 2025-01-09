@@ -28,6 +28,7 @@ import { CreateChannelDialog } from "./CreateChannelDialog";
 import { JoinChannelDialog } from "./JoinChannelDialog";
 import { CreateDMDialog } from "./CreateDMDialog";
 import { useToast } from "@/hooks/use-toast";
+import { useParams } from "wouter";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -52,7 +53,12 @@ interface WorkspaceMember {
   userId: number;
 }
 
+interface Params {
+  workspaceId?: string;
+}
+
 export default function ChannelList({ selectedChannel, onChannelSelect }: ChannelListProps) {
+  const { workspaceId } = useParams<Params>();
   const { toast } = useToast();
   const [expandedSections, setExpandedSections] = useState({
     starred: true,
@@ -65,12 +71,14 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
 
   // Fetch channels from API
   const { data: channels, isLoading, error } = useQuery<Channel[]>({
-    queryKey: ['/api/workspaces/1/channels'],
+    queryKey: [`/api/workspaces/${workspaceId}/channels`],
+    enabled: !!workspaceId,
   });
 
   // Fetch workspace members to check admin status
   const { data: workspaceMembers } = useQuery<WorkspaceMember[]>({
-    queryKey: ['/api/workspaces/1/members'],
+    queryKey: [`/api/workspaces/${workspaceId}/members`],
+    enabled: !!workspaceId,
   });
 
   const isAdmin = workspaceMembers?.some(
@@ -94,7 +102,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/channels`] });
       setShowDeleteDialog(null);
       toast({
         title: "Channel deleted",

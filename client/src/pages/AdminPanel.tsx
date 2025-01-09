@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Users, Settings, AppWindow, History, UserPlus, Shield, ArrowLeft } from "lucide-react";
 import { useParams, useLocation } from "wouter";
+import MemberManageModal from "@/components/workspace/MemberManageModal";
+import { useState } from "react";
 
 // Mock data for demonstration
 const mockMembers = [
@@ -15,6 +17,13 @@ const mockMembers = [
 export default function AdminPanel() {
   const { workspaceId } = useParams();
   const [, navigate] = useLocation();
+  const [selectedMember, setSelectedMember] = useState(null);
+  const [showManageModal, setShowManageModal] = useState(false);
+
+  const handleManageMember = (member) => {
+    setSelectedMember(member);
+    setShowManageModal(true);
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -82,7 +91,11 @@ export default function AdminPanel() {
                             <Shield className="h-4 w-4" />
                             {member.role}
                           </span>
-                          <Button variant="outline" size="sm">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleManageMember(member)}
+                          >
                             Manage
                           </Button>
                         </div>
@@ -93,6 +106,7 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
+
           <TabsContent value="settings">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Workspace Settings</h2>
@@ -110,6 +124,7 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
+
           <TabsContent value="apps">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Apps & Integrations</h2>
@@ -127,6 +142,7 @@ export default function AdminPanel() {
               </div>
             </Card>
           </TabsContent>
+
           <TabsContent value="audit">
             <Card className="p-6">
               <h2 className="text-2xl font-semibold mb-4">Audit Log</h2>
@@ -139,6 +155,16 @@ export default function AdminPanel() {
           </TabsContent>
         </div>
       </Tabs>
+
+      {/* Member Management Modal */}
+      <MemberManageModal
+        member={selectedMember}
+        isOpen={showManageModal}
+        onClose={() => {
+          setShowManageModal(false);
+          setSelectedMember(null);
+        }}
+      />
     </div>
   );
 }

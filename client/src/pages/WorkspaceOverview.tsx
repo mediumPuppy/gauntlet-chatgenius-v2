@@ -46,12 +46,13 @@ const workspace = {
   ],
 };
 
+// Update navigationLinks array
 const navigationLinks = [
-  { name: "Channels", icon: MessageSquare, href: "/channels" },
-  { name: "Members", icon: Users, href: "/members" },
-  { name: "Files", icon: FileText, href: "/files" },
-  { name: "Integrations", icon: Puzzle, href: "/integrations" },
-  { name: "Analytics", icon: LineChart, href: "/analytics", adminOnly: true },
+  { name: "Channels", icon: MessageSquare, href: (id: string) => `/workspace/${id}/channels` },
+  { name: "Members", icon: Users, href: (id: string) => `/workspace/${id}/members` },
+  { name: "Files", icon: FileText, href: (id: string) => `/workspace/${id}/files` },
+  { name: "Integrations", icon: Puzzle, href: (id: string) => `/workspace/${id}/admin?tab=apps` },
+  { name: "Analytics", icon: LineChart, href: (id: string) => `/workspace/${id}/analytics`, adminOnly: true },
 ];
 
 export default function WorkspaceOverview() {
@@ -133,12 +134,10 @@ export default function WorkspaceOverview() {
                 key={link.name}
                 variant="outline"
                 className="h-24 flex flex-col items-center justify-center gap-2"
-                asChild
+                onClick={() => navigate(link.href(workspace.id))}
               >
-                <a href={link.href}>
-                  <link.icon className="h-6 w-6" />
-                  <span>{link.name}</span>
-                </a>
+                <link.icon className="h-6 w-6" />
+                <span>{link.name}</span>
               </Button>
             ))}
           </div>

@@ -9,32 +9,82 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Hash, Lock } from "lucide-react";
+import { Hash, Lock, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+
+interface Channel {
+  id: number;
+  name: string;
+  type: string;
+  topic: string | null;
+  isPrivate: boolean;
+  memberCount?: number;
+}
 
 interface JoinChannelDialogProps {
   trigger?: React.ReactNode;
 }
 
-// Temporary mock data for UI development
-const MOCK_CHANNELS = [
-  { id: 1, name: "general", memberCount: 45, isPrivate: false },
-  { id: 2, name: "design", memberCount: 12, isPrivate: false },
-  { id: 3, name: "engineering", memberCount: 28, isPrivate: true },
-  { id: 4, name: "marketing", memberCount: 8, isPrivate: false },
-];
-
 export function JoinChannelDialog({ trigger }: JoinChannelDialogProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const filteredChannels = MOCK_CHANNELS.filter((channel) =>
+  const { data: channels, isLoading, error } = useQuery<Channel[]>({
+    queryKey: ['/api/workspaces/1/channels/available'],
+    queryFn: async () => {
+      const response = await fetch('/api/workspaces/1/channels/available');
+      if (!response.ok) {
+        throw new Error('Failed to fetch channels');
+      }
+      return response.json();
+    },
+  });
+
+  const joinChannel = useMutation({
+    mutationFn: async (channelId: number) => {
+      const response = await fetch(`/api/channels/${channelId}/join`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to join channel');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels/available'] });
+      toast({
+        title: "Channel joined",
+        description: "You've successfully joined the channel.",
+      });
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error joining channel",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredChannels = channels?.filter((channel) =>
     channel.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button variant="outline">Browse channels</Button>}
+        {trigger || (
+          <Button variant="ghost" size="sm" className="w-full justify-start">
+            <Hash className="mr-2 h-4 w-4" />
+            Browse channels
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -50,35 +100,55 @@ export function JoinChannelDialog({ trigger }: JoinChannelDialogProps) {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="mb-4"
           />
-          <ScrollArea className="h-[300px] pr-4">
-            <div className="space-y-2">
-              {filteredChannels.map((channel) => (
-                <div
-                  key={channel.id}
-                  className="flex items-center justify-between p-2 rounded-md hover:bg-muted cursor-pointer group"
-                >
-                  <div className="flex items-center gap-2">
-                    {channel.isPrivate ? (
-                      <Lock className="w-4 h-4 text-muted-foreground" />
-                    ) : (
-                      <Hash className="w-4 h-4 text-muted-foreground" />
-                    )}
-                    <span className="font-medium">{channel.name}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {channel.memberCount} members
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    className="opacity-0 group-hover:opacity-100"
-                    disabled={channel.isPrivate}
-                  >
-                    Join
-                  </Button>
-                </div>
-              ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          </ScrollArea>
+          ) : error ? (
+            <div className="text-center py-8 text-destructive">
+              Failed to load channels. Please try again.
+            </div>
+          ) : filteredChannels?.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No channels found
+            </div>
+          ) : (
+            <ScrollArea className="h-[300px] pr-4">
+              <div className="space-y-2">
+                {filteredChannels?.map((channel) => (
+                  <div
+                    key={channel.id}
+                    className="flex items-center justify-between p-2 rounded-md hover:bg-muted cursor-pointer group"
+                  >
+                    <div className="flex items-center gap-2">
+                      {channel.isPrivate ? (
+                        <Lock className="w-4 h-4 text-muted-foreground" />
+                      ) : (
+                        <Hash className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      <span className="font-medium">{channel.name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {channel.memberCount || 0} members
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="opacity-0 group-hover:opacity-100"
+                      disabled={channel.isPrivate || joinChannel.isPending}
+                      onClick={() => joinChannel.mutate(channel.id)}
+                    >
+                      {joinChannel.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Join"
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -1,11 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import channelRoutes from "./routes/channels";
+import messageRoutes from "./routes/messages";
 import { db } from "@db";
-import { workspaces, workspaceMembers, users, insertWorkspaceSchema, insertWorkspaceMemberSchema } from "@db/schema";
+import { workspaces, workspaceMembers, users } from "@db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 
-// Validation schemas
+// Keep existing workspace validation schemas
 const createWorkspaceSchema = z.object({
   name: z.string().min(1, "Workspace name is required"),
   metadata: z.record(z.unknown()).optional(),
@@ -23,13 +25,16 @@ const switchWorkspaceSchema = z.object({
 });
 
 export function registerRoutes(app: Express): Server {
+  // Register the new route handlers
+  app.use(channelRoutes);
+  app.use(messageRoutes);
+
+  // Keep existing workspace routes
   // Get all workspaces for the current user
   app.get("/api/workspaces", async (req, res) => {
     try {
-      // TODO: Replace with actual user ID from auth
-      const userId = 1; // Temporary until auth is implemented
+      const userId = 1; // TODO: Replace with actual user ID from auth
 
-      // Get all workspaces where user is a member
       const result = await db.query.workspaceMembers.findMany({
         where: eq(workspaceMembers.userId, userId),
         with: {
@@ -42,7 +47,6 @@ export function registerRoutes(app: Express): Server {
         },
       });
 
-      // Transform the data to match the frontend requirements
       const workspaceList = result.map((membership) => ({
         id: membership.workspace.id,
         name: membership.workspace.name,
@@ -98,7 +102,7 @@ export function registerRoutes(app: Express): Server {
         settings: workspace.settings,
         owner: {
           id: userId,
-          username: 'currentuser',
+          username: 'currentuser', // TODO: Get actual username
         },
       });
     } catch (error) {

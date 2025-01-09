@@ -1,98 +1,341 @@
-import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, jsonb, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { relations } from "drizzle-orm";
 
+// Users and Authentication
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  email: text("email").unique().notNull(),
+  auth0Id: text("auth0_id").unique(),
   username: text("username").unique().notNull(),
   password: text("password").notNull(),
+  displayName: text("display_name"),
+  avatar: text("avatar_url"),
+  status: jsonb("status").$type<{
+    text: string;
+    emoji: string;
+    expiresAt: Date;
+  }>(),
+  isBot: boolean("is_bot").default(false),
+  botOwnerId: integer("bot_owner_id").references(() => users.id, { onDelete: 'set null' }),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  twoFactorMethod: text("two_factor_method"),
+  lastActive: timestamp("last_active").defaultNow(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
 });
 
-export const insertUserSchema = createInsertSchema(users);
-export const selectUserSchema = createSelectSchema(users);
-export type InsertUser = typeof users.$inferInsert;
-export type SelectUser = typeof users.$inferSelect;
+// User Preferences
+export const userPreferences = pgTable("user_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  notifications: jsonb("notifications").$type<{
+    desktop: {
+      enabled: boolean;
+      sound: boolean;
+      mentions: boolean;
+      messages: boolean;
+      quietHours: {
+        enabled: boolean;
+        start: string;
+        end: string;
+        timezone: string;
+      };
+    };
+    mobile: {
+      enabled: boolean;
+      sound: boolean;
+      mentions: boolean;
+      messages: boolean;
+      quietHours: {
+        enabled: boolean;
+        start: string;
+        end: string;
+        timezone: string;
+      };
+    };
+    email: {
+      enabled: boolean;
+      digest: string;
+    };
+  }>(),
+  theme: jsonb("theme").$type<{
+    mode: string;
+    customColors: Record<string, string>;
+    fontSize: string;
+    compact: boolean;
+  }>(),
+  version: integer("version").notNull().default(1),
+});
 
-// Workspace table
+// Workspaces
 export const workspaces = pgTable("workspaces", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   ownerId: integer("owner_id").notNull().references(() => users.id, { onDelete: 'restrict' }),
-  settings: jsonb("settings").notNull().default({
-    defaultChannelPermissions: {
-      canInvite: true,
-      canPost: true,
-      canUploadFiles: true
-    },
-    defaultMemberPermissions: {
-      canCreateChannels: true,
-      canManageIntegrations: false
-    },
+  settings: jsonb("settings").$type<{
+    defaultChannelPermissions: Record<string, boolean>;
+    defaultMemberPermissions: Record<string, boolean>;
     fileRetention: {
-      policy: "delete",
-      duration: 90
-    },
+      policy: string;
+      duration: number;
+    };
     messageRetention: {
-      policy: "keep",
-      duration: null
-    },
-    allowedAuthMethods: ["password"],
-    allowedIntegrations: []
-  }),
+      policy: string;
+      duration: number | null;
+    };
+    allowedAuthMethods: string[];
+    allowedIntegrations: string[];
+  }>(),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   version: integer("version").notNull().default(1),
 });
 
-// WorkspaceMember table
+// Workspace Members
 export const workspaceMembers = pgTable("workspace_members", {
   id: serial("id").primaryKey(),
   workspaceId: integer("workspace_id").notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   role: text("role").notNull().default('member'),
-  permissions: jsonb("permissions").notNull().default({
-    canManageUsers: false,
-    canManageBilling: false,
-    canConfigureWorkspace: false
-  }),
+  permissions: jsonb("permissions").$type<{
+    canManageUsers: boolean;
+    canManageBilling: boolean;
+    canConfigureWorkspace: boolean;
+  }>(),
   joinedAt: timestamp("joined_at").notNull().defaultNow(),
   invitedBy: integer("invited_by").references(() => users.id, { onDelete: 'set null' }),
   metadata: jsonb("metadata"),
   version: integer("version").notNull().default(1),
 });
 
+// Channels
+export const channels = pgTable("channels", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(),
+  name: text("name").notNull(),
+  topic: text("topic"),
+  createdBy: integer("created_by").references(() => users.id, { onDelete: 'set null' }),
+  settings: jsonb("settings").$type<{
+    retention: {
+      type: string;
+      days: number | null;
+    };
+    defaultNotifications: string;
+    allowThreads: boolean;
+    allowUploads: boolean;
+    allowIntegrations: boolean;
+    allowBots: boolean;
+  }>(),
+  isPrivate: boolean("is_private").default(false),
+  isDm: boolean("is_dm").default(false),
+  archivedAt: timestamp("archived_at"),
+  archivedBy: integer("archived_by").references(() => users.id, { onDelete: 'set null' }),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
+});
+
+// Messages
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  channelId: integer("channel_id").notNull().references(() => channels.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  rootMessageId: integer("root_message_id").references(() => messages.id, { onDelete: 'cascade' }),
+  parentId: integer("parent_id").references(() => messages.id, { onDelete: 'cascade' }),
+  content: jsonb("content").$type<{
+    blocks: Array<{
+      type: string;
+      content: any;
+      metadata: any;
+    }>;
+    formattedText: string;
+    rawText: string;
+  }>(),
+  aiGenerated: boolean("ai_generated").default(false),
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
+});
+
+// Files
+export const files = pgTable("files", {
+  id: serial("id").primaryKey(),
+  workspaceId: integer("workspace_id").notNull().references(() => workspaces.id, { onDelete: 'cascade' }),
+  uploaderId: integer("uploader_id").references(() => users.id, { onDelete: 'set null' }),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  size: integer("size").notNull(),
+  url: text("url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  altText: text("alt_text"),
+  previewStatus: text("preview_status"),
+  previewUrls: jsonb("preview_urls").$type<{
+    small: string;
+    medium: string;
+    large: string;
+  }>(),
+  retentionPolicy: text("retention_policy"),
+  retentionExpiresAt: timestamp("retention_expires_at"),
+  s3Details: jsonb("s3_details").$type<{
+    bucket: string;
+    key: string;
+    versionId: string;
+    storageClass: string;
+    presignedUrl: {
+      url: string;
+      expiresAt: Date;
+    };
+  }>(),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
+});
+
+// Message mentions, files, reactions, and saved by
+export const messageMentions = pgTable("message_mentions", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  mentionOffset: integer("mention_offset").notNull(),
+  mentionLength: integer("mention_length").notNull(),
+});
+
+export const messageFiles = pgTable("message_files", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  fileId: integer("file_id").references(() => files.id, { onDelete: 'set null' }),
+  name: text("name").notNull(),
+  type: text("type").notNull(),
+  size: integer("size").notNull(),
+  url: text("url").notNull(),
+});
+
+export const messageReactions = pgTable("message_reactions", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  emoji: text("emoji").notNull(),
+  userIds: integer("user_ids").array(),
+});
+
+export const messageSavedBy = pgTable("message_saved_by", {
+  id: serial("id").primaryKey(),
+  messageId: integer("message_id").notNull().references(() => messages.id, { onDelete: 'cascade' }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  savedAt: timestamp("saved_at").notNull().defaultNow(),
+});
+
+// Audit logs
+export const auditLogs = pgTable("audit_logs", {
+  id: serial("id").primaryKey(),
+  actionType: text("action_type").notNull(),
+  entityType: text("entity_type").notNull(),
+  entityId: text("entity_id").notNull(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'set null' }),
+  workspaceId: integer("workspace_id").references(() => workspaces.id, { onDelete: 'cascade' }),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  version: integer("version").notNull().default(1),
+});
+
+// Saved items
+export const savedItems = pgTable("saved_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(),
+  itemId: text("item_id").notNull(),
+  workspaceId: integer("workspace_id").references(() => workspaces.id, { onDelete: 'cascade' }),
+  channelId: integer("channel_id").references(() => channels.id, { onDelete: 'cascade' }),
+  savedAt: timestamp("saved_at").notNull().defaultNow(),
+  notes: text("notes"),
+  tags: text("tags").array(),
+  version: integer("version").notNull().default(1),
+});
+
+// Sessions
+export const sessions = pgTable("sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  lastActive: timestamp("last_active").notNull().defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+  isCurrent: boolean("is_current").default(true),
+  version: integer("version").notNull().default(1),
+});
+
 // Define relationships
+export const userRelations = relations(users, ({ one, many }) => ({
+  preferences: one(userPreferences, {
+    fields: [users.id],
+    references: [userPreferences.userId],
+  }),
+  ownedWorkspaces: many(workspaces),
+  workspaceMemberships: many(workspaceMembers),
+  messages: many(messages),
+  uploadedFiles: many(files),
+  mentions: many(messageMentions),
+  savedMessages: many(messageSavedBy),
+  sessions: many(sessions),
+}));
+
 export const workspaceRelations = relations(workspaces, ({ one, many }) => ({
   owner: one(users, {
     fields: [workspaces.ownerId],
     references: [users.id],
   }),
   members: many(workspaceMembers),
+  channels: many(channels),
+  files: many(files),
+  auditLogs: many(auditLogs),
 }));
 
-export const workspaceMemberRelations = relations(workspaceMembers, ({ one }) => ({
+export const channelRelations = relations(channels, ({ one, many }) => ({
   workspace: one(workspaces, {
-    fields: [workspaceMembers.workspaceId],
+    fields: [channels.workspaceId],
     references: [workspaces.id],
   }),
-  user: one(users, {
-    fields: [workspaceMembers.userId],
+  messages: many(messages),
+}));
+
+export const messageRelations = relations(messages, ({ one, many }) => ({
+  channel: one(channels, {
+    fields: [messages.channelId],
+    references: [channels.id],
+  }),
+  author: one(users, {
+    fields: [messages.userId],
     references: [users.id],
   }),
-  inviter: one(users, {
-    fields: [workspaceMembers.invitedBy],
-    references: [users.id],
-  }),
+  mentions: many(messageMentions),
+  files: many(messageFiles),
+  reactions: many(messageReactions),
+  savedBy: many(messageSavedBy),
 }));
 
 // Create Zod schemas for validation
+export const insertUserSchema = createInsertSchema(users);
+export const selectUserSchema = createSelectSchema(users);
 export const insertWorkspaceSchema = createInsertSchema(workspaces);
 export const selectWorkspaceSchema = createSelectSchema(workspaces);
-export const insertWorkspaceMemberSchema = createInsertSchema(workspaceMembers);
-export const selectWorkspaceMemberSchema = createSelectSchema(workspaceMembers);
+export const insertChannelSchema = createInsertSchema(channels);
+export const selectChannelSchema = createSelectSchema(channels);
+export const insertMessageSchema = createInsertSchema(messages);
+export const selectMessageSchema = createSelectSchema(messages);
+export const insertFileSchema = createInsertSchema(files);
+export const selectFileSchema = createSelectSchema(files);
 
 // Export types
+export type InsertUser = typeof users.$inferInsert;
+export type SelectUser = typeof users.$inferSelect;
 export type InsertWorkspace = typeof workspaces.$inferInsert;
 export type SelectWorkspace = typeof workspaces.$inferSelect;
-export type InsertWorkspaceMember = typeof workspaceMembers.$inferInsert;
-export type SelectWorkspaceMember = typeof workspaceMembers.$inferSelect;
+export type InsertChannel = typeof channels.$inferInsert;
+export type SelectChannel = typeof channels.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;
+export type SelectMessage = typeof messages.$inferSelect;
+export type InsertFile = typeof files.$inferInsert;
+export type SelectFile = typeof files.$inferSelect;

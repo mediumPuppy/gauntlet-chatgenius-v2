@@ -3,7 +3,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
 import { Button } from "@/components/ui/button";
-import { Hash, Bot, Pin, Users } from "lucide-react";
+import { 
+  Hash, 
+  Bot, 
+  Pin, 
+  Users, 
+  Search,
+  Info,
+  MessageSquare
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -16,11 +32,43 @@ const getChannelInfo = (channelId: string) => {
     ...channels.channels,
     ...channels.directMessages
   ];
-  return allChannels.find(c => c.id === channelId);
+  const channel = allChannels.find(c => c.id === channelId);
+  if (channel) {
+    return {
+      ...channel,
+      topic: "This is the main channel for team discussions and announcements",
+      memberCount: 24,
+      pinnedCount: 5
+    };
+  }
+  return null;
 };
 
 export default function ChatArea({ channelId }: ChatAreaProps) {
-  const [messages] = useState<any[]>([]); // Will be replaced with real data
+  const [messages] = useState<any[]>([
+    {
+      id: '1',
+      user: { name: 'John Doe', avatar: '' },
+      content: 'Hello team! Here\'s the latest update on our project.',
+      timestamp: '11:30 AM',
+      reactions: [
+        { emoji: '👍', count: 3 },
+        { emoji: '🎉', count: 2 }
+      ],
+      threadCount: 5
+    },
+    {
+      id: '2',
+      user: { name: 'Jane Smith', avatar: '' },
+      content: 'Thanks for the update! The progress looks great.',
+      timestamp: '11:32 AM',
+      reactions: [
+        { emoji: '❤️', count: 1 }
+      ],
+      threadCount: 0
+    }
+  ]); 
+  const [showSearch, setShowSearch] = useState(false);
   const channel = channelId ? getChannelInfo(channelId) : null;
 
   if (!channelId || !channel) {
@@ -33,30 +81,125 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Channel Header */}
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Hash className="w-5 h-5 text-muted-foreground" />
-          <h2 className="font-semibold">{channel.name}</h2>
+      {/* Enhanced Channel Header */}
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <Hash className="w-5 h-5 text-muted-foreground" />
+              <h2 className="font-semibold">{channel.name}</h2>
+              <div className="text-xs text-muted-foreground">
+                {channel.memberCount} members
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">{channel.topic}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              onClick={() => setShowSearch(!showSearch)}
+            >
+              <Search className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Bot className="w-5 h-5" />
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Pin className="w-5 h-5" />
+            </Button>
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Info className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle>Channel Info</SheetTitle>
+                </SheetHeader>
+                <div className="space-y-4 mt-4">
+                  <div>
+                    <h3 className="font-semibold mb-2">About</h3>
+                    <p className="text-sm text-muted-foreground">{channel.topic}</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Members</h3>
+                    <p className="text-sm">{channel.memberCount} members</p>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold mb-2">Pinned Items</h3>
+                    <p className="text-sm">{channel.pinnedCount} pinned messages</p>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Bot className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Pin className="w-5 h-5" />
-          </Button>
-          <Button variant="ghost" size="icon">
-            <Users className="w-5 h-5" />
-          </Button>
-        </div>
+        {/* Search Bar - Only shown when search is active */}
+        {showSearch && (
+          <div className="mt-2">
+            <input
+              type="text"
+              placeholder="Search in channel..."
+              className="w-full px-3 py-2 rounded-md border bg-background"
+            />
+          </div>
+        )}
       </div>
 
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
-        {messages.map((message, i) => (
-          <Message key={i} message={message} />
-        ))}
+        <div className="space-y-4">
+          {messages.map((message) => (
+            <div key={message.id} className="group">
+              <div className="flex items-start gap-3 hover:bg-muted/50 p-2 rounded-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  {message.user.name.charAt(0)}
+                </div>
+                <div className="flex-1 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold">{message.user.name}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {message.timestamp}
+                    </span>
+                  </div>
+                  <p className="text-sm">{message.content}</p>
+
+                  {/* Reactions and Thread */}
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex -space-x-1">
+                      {message.reactions.map((reaction, i) => (
+                        <div
+                          key={i}
+                          className="px-2 py-1 text-xs bg-muted rounded-full flex items-center gap-1"
+                        >
+                          <span>{reaction.emoji}</span>
+                          <span>{reaction.count}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className={cn(
+                        "text-xs gap-1",
+                        message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
+                      )}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                      {message.threadCount > 0 
+                        ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
+                        : 'Reply in thread'
+                      }
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Hash className="w-12 h-12 mb-4" />

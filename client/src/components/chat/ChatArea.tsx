@@ -10,7 +10,7 @@ import {
   Search,
   Info,
   MessageSquare,
-  X,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -21,97 +21,191 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { MessageComposer } from "@/components/message/MessageComposer";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getStatusColor, formatStatus } from "@/lib/utils";
-import data from "@emoji-mart/data";
-import Picker from "@emoji-mart/react";
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
+const createChannelSchema = z.object({
+  name: z.string().min(1, "Channel name is required").max(80, "Channel name is too long"),
+  isPrivate: z.boolean().default(false),
+  topic: z.string().optional(),
+});
 
 interface ChatAreaProps {
   channelId: string | null;
 }
 
-const channels = {
-  starred: [
-    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
-    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
-  ],
-  channels: [
-    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
-    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
-    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
-  ],
-  directMessages: [
-    {
-      id: "6",
-      name: "Jane Smith",
-      avatar: "https://example.com/jane.jpg",
-      status: {
-        text: "In a meeting",
-        emoji: "🗣️",
-        lastActive: new Date().toISOString(),
-      },
-      isOnline: true,
-      unreadCount: 1,
+function CreateChannelDialog() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const form = useForm({
+    resolver: zodResolver(createChannelSchema),
+    defaultValues: {
+      name: "",
+      isPrivate: false,
+      topic: "",
     },
-    {
-      id: "7",
-      name: "John Doe",
-      avatar: "https://example.com/john.jpg",
-      status: {
-        text: "Away",
-        emoji: "🌙",
-        lastActive: new Date(Date.now() - 3600000).toISOString(),
-      },
-      isOnline: false,
-      unreadCount: 0,
-    },
-    {
-      id: "8",
-      name: "Alice Johnson",
-      avatar: "https://example.com/alice.jpg",
-      status: {
-        text: "Available",
-        emoji: "💻",
-        lastActive: new Date().toISOString(),
-      },
-      isOnline: true,
-      unreadCount: 4,
-    },
-  ],
-};
+  });
 
-const getChannelInfo = (channelId: string) => {
-  const allChannels = [
-    ...channels.starred,
-    ...channels.channels,
-    ...channels.directMessages,
-  ];
-  const channel = allChannels.find((c) => c.id === channelId);
-  if (channel) {
-    return {
-      ...channel,
-      isDm: Boolean(channels.directMessages.find((dm) => dm.id === channelId)),
-      topic: channel.isDm
-        ? "Direct Message"
-        : "This is the main channel for team discussions and announcements",
-      memberCount: 24,
-      pinnedCount: 5,
-    };
-  }
-  return null;
-};
+  const createChannel = useMutation({
+    mutationFn: async (data: z.infer<typeof createChannelSchema>) => {
+      const res = await fetch("/api/channels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const error = await res.text();
+        throw new Error(error);
+      }
+
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/channels"] });
+      toast({
+        title: "Channel created",
+        description: "Your new channel has been created successfully.",
+      });
+      form.reset();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  return (
+    <Dialog>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon">
+            <Plus className="h-5 w-5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DialogTrigger asChild>
+            <DropdownMenuItem>
+              <Hash className="mr-2 h-4 w-4" />
+              Create Channel
+            </DropdownMenuItem>
+          </DialogTrigger>
+          <DropdownMenuItem>
+            <Users className="mr-2 h-4 w-4" />
+            Join Channel
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create a new channel</DialogTitle>
+          <DialogDescription>
+            Channels are where your team communicates. They're best organized around a topic - #marketing, for example.
+          </DialogDescription>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit((data) => createChannel.mutate(data))} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Channel name</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. marketing" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Keep it simple and descriptive
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="topic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Add a topic" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Let people know what this channel is about
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isPrivate"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Make private
+                    </FormLabel>
+                    <FormDescription>
+                      When a channel is private, it can only be viewed or joined by invitation
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button type="submit" disabled={createChannel.isPending}>
+                {createChannel.isPending ? "Creating..." : "Create Channel"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function ChatArea({ channelId }: ChatAreaProps) {
   const [messages] = useState<any[]>([
@@ -167,6 +261,77 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     console.log("Is thread message:", isThread);
   };
 
+  const getChannelInfo = (channelId: string) => {
+    const allChannels = [
+      ...channels.starred,
+      ...channels.channels,
+      ...channels.directMessages,
+    ];
+    const channel = allChannels.find((c) => c.id === channelId);
+    if (channel) {
+      return {
+        ...channel,
+        isDm: Boolean(channels.directMessages.find((dm) => dm.id === channelId)),
+        topic: channel.isDm
+          ? "Direct Message"
+          : "This is the main channel for team discussions and announcements",
+        memberCount: 24,
+        pinnedCount: 5,
+      };
+    }
+    return null;
+  };
+
+  const channels = {
+    starred: [
+      { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
+      { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
+    ],
+    channels: [
+      { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
+      { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
+      { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
+    ],
+    directMessages: [
+      {
+        id: "6",
+        name: "Jane Smith",
+        avatar: "https://example.com/jane.jpg",
+        status: {
+          text: "In a meeting",
+          emoji: "🗣️",
+          lastActive: new Date().toISOString(),
+        },
+        isOnline: true,
+        unreadCount: 1,
+      },
+      {
+        id: "7",
+        name: "John Doe",
+        avatar: "https://example.com/john.jpg",
+        status: {
+          text: "Away",
+          emoji: "🌙",
+          lastActive: new Date(Date.now() - 3600000).toISOString(),
+        },
+        isOnline: false,
+        unreadCount: 0,
+      },
+      {
+        id: "8",
+        name: "Alice Johnson",
+        avatar: "https://example.com/alice.jpg",
+        status: {
+          text: "Available",
+          emoji: "💻",
+          lastActive: new Date().toISOString(),
+        },
+        isOnline: true,
+        unreadCount: 4,
+      },
+    ],
+  };
+
   if (!channelId || !channel) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -219,11 +384,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSearch(!showSearch)}
-            >
+            <CreateChannelDialog />
+            <Button variant="ghost" size="icon" onClick={() => setShowSearch(!showSearch)}>
               <Search className="w-5 h-5" />
             </Button>
             <Button variant="ghost" size="icon">
@@ -419,7 +581,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-full p-0" align="start">
-                      <Picker
+                      {/* <Picker
                         data={data}
                         onEmojiSelect={(emoji: any) =>
                           handleReaction(message.id, emoji.native)
@@ -427,7 +589,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                         theme="light"
                         previewPosition="none"
                         skinTonePosition="none"
-                      />
+                      /> */}
                     </PopoverContent>
                   </Popover>
                 </ContextMenuContent>
@@ -455,3 +617,16 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     </div>
   );
 }
+
+//Removed the following lines because they were not used in the code.
+//import data from "@emoji-mart/data";
+//import Picker from "@emoji-mart/react";
+//import {
+//  Popover,
+//  PopoverTrigger,
+//  PopoverContent,
+//} from "@/components/ui/popover";
+
+
+//import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+//import { getStatusColor, formatStatus } from "@/lib/utils";

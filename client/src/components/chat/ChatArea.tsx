@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
@@ -11,7 +11,7 @@ import {
   Search,
   Info,
   MessageSquare,
-  X,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -35,75 +35,18 @@ interface ChatAreaProps {
   channelId: string | null;
 }
 
-// This is just for the getChannelInfo function, will be replaced with real data later
-const channels = {
-  starred: [
-    { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
-    { id: "2", name: "important", isPrivate: true, unreadCount: 0 },
-  ],
-  channels: [
-    { id: "3", name: "general", isPrivate: false, unreadCount: 5 },
-    { id: "4", name: "random", isPrivate: false, unreadCount: 0 },
-    { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
-  ],
-  directMessages: [
-    { 
-      id: "6", 
-      name: "Jane Smith", 
-      avatar: "https://example.com/jane.jpg",
-      status: {
-        text: "In a meeting",
-        emoji: "🗣️",
-        lastActive: new Date().toISOString()
-      },
-      isOnline: true,
-      unreadCount: 1 
-    },
-    { 
-      id: "7", 
-      name: "John Doe", 
-      avatar: "https://example.com/john.jpg",
-      status: {
-        text: "Away",
-        emoji: "🌙",
-        lastActive: new Date(Date.now() - 3600000).toISOString()
-      },
-      isOnline: false,
-      unreadCount: 0 
-    },
-    { 
-      id: "8", 
-      name: "Alice Johnson", 
-      avatar: "https://example.com/alice.jpg",
-      status: {
-        text: "Available",
-        emoji: "💻",
-        lastActive: new Date().toISOString()
-      },
-      isOnline: true,
-      unreadCount: 4 
-    }
-  ],
-};
-
 // Mock function to get channel info - will be replaced with real data later
 const getChannelInfo = (channelId: string) => {
-  const allChannels = [
-    ...channels.starred,
-    ...channels.channels,
-    ...channels.directMessages
-  ];
-  const channel = allChannels.find(c => c.id === channelId);
-  if (channel) {
-    return {
-      ...channel,
-      isDm: Boolean(channels.directMessages.find(dm => dm.id === channelId)),
-      topic: channel.isDm ? "Direct Message" : "This is the main channel for team discussions and announcements",
-      memberCount: 24,
-      pinnedCount: 5
-    };
-  }
-  return null;
+  return {
+    id: channelId,
+    name: "general",
+    topic: "General discussion",
+    isDm: false,
+    memberCount: 24,
+    pinnedCount: 5,
+    isPrivate: false,
+    unreadCount: 0
+  };
 };
 
 export default function ChatArea({ channelId }: ChatAreaProps) {
@@ -118,6 +61,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         { emoji: '🎉', count: 2 }
       ],
       threadCount: 5,
+      isUnread: true,
       thread: [
         {
           id: 't1',
@@ -144,13 +88,52 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         { emoji: '❤️', count: 1 }
       ],
       threadCount: 0,
+      isUnread: true,
       thread: []
     }
   ]);
 
   const [showSearch, setShowSearch] = useState(false);
   const [activeThread, setActiveThread] = useState<string | null>(null);
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const [hasUnreadBelow, setHasUnreadBelow] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
   const channel = channelId ? getChannelInfo(channelId) : null;
+
+  // Handle scroll
+  const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 100;
+    setShowScrollToBottom(!isNearBottom);
+
+    // If scrolled up and more messages available, load more
+    if (scrollTop < 100) {
+      // TODO: Implement loading more messages
+      console.log("Load more messages");
+    }
+  };
+
+  // Scroll to bottom
+  const scrollToBottom = () => {
+    lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setHasUnreadBelow(false);
+  };
+
+  // Auto scroll to bottom on new message
+  useEffect(() => {
+    if (messages.length > 0) {
+      const isNearBottom = 
+        scrollAreaRef.current && 
+        scrollAreaRef.current.scrollHeight - scrollAreaRef.current.scrollTop - scrollAreaRef.current.clientHeight < 100;
+
+      if (isNearBottom) {
+        scrollToBottom();
+      } else {
+        setHasUnreadBelow(true);
+      }
+    }
+  }, [messages]);
 
   const handleReaction = (messageId: string, emoji: string) => {
     console.log(`Adding reaction ${emoji} to message ${messageId}`);
@@ -167,7 +150,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Enhanced Channel/DM Header */}
+      {/* Channel Header - unchanged */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -259,131 +242,54 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         )}
       </div>
 
-      <div className="flex-1">
-        <ScrollArea className="h-full p-4">
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <ContextMenu key={message.id}>
-                <ContextMenuTrigger>
-                  <div className="group">
-                    <div className="flex items-start gap-3 hover:bg-muted/50 p-2 rounded-lg">
-                      {!channel.isDm && (
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {message.user.name.charAt(0)}
-                        </div>
-                      )}
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{message.user.name}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {message.timestamp}
-                          </span>
-                        </div>
-                        <p className="text-sm">{message.content}</p>
-
-                        <div className="flex items-center gap-4 mt-2">
-                          <div className="flex -space-x-1">
-                            {message.reactions.map((reaction: any, i: number) => (
-                              <div
-                                key={i}
-                                className="px-2 py-1 text-xs bg-muted rounded-full flex items-center gap-1"
-                              >
-                                <span>{reaction.emoji}</span>
-                                <span>{reaction.count}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          <Sheet open={activeThread === message.id} onOpenChange={(open) => {
-                            if (!open) setActiveThread(null);
-                            else setActiveThread(message.id);
-                          }}>
-                            <SheetTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className={cn(
-                                  "text-xs gap-1",
-                                  message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
-                                )}
-                              >
-                                <MessageSquare className="w-4 h-4" />
-                                {message.threadCount > 0
-                                  ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
-                                  : 'Reply in thread'
-                                }
-                              </Button>
-                            </SheetTrigger>
-                            <SheetContent>
-                              <SheetHeader>
-                                <SheetTitle>Thread</SheetTitle>
-                              </SheetHeader>
-
-                              <div className="mt-4 p-4 border-b bg-muted/30 rounded-lg">
-                                <div className="flex items-start gap-3">
-                                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                                    {message.user.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-semibold text-sm">{message.user.name}</span>
-                                      <span className="text-xs text-muted-foreground">{message.timestamp}</span>
-                                    </div>
-                                    <p className="text-sm mt-1">{message.content}</p>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <ScrollArea className="flex-1 mt-4">
-                                <div className="space-y-4">
-                                  {message.thread.map((reply: any) => (
-                                    <div key={reply.id} className="flex items-start gap-3">
-                                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
-                                        {reply.user.name.charAt(0)}
-                                      </div>
-                                      <div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="font-semibold text-sm">{reply.user.name}</span>
-                                          <span className="text-xs text-muted-foreground">{reply.timestamp}</span>
-                                        </div>
-                                        <p className="text-sm mt-1">{reply.content}</p>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </ScrollArea>
-
-                              <div className="mt-4">
-                                <MessageInput
-                                  channelId={channelId}
-                                  channelName={`Thread in ${channel.name}`}
-                                />
-                              </div>
-                            </SheetContent>
-                          </Sheet>
-                        </div>
-                      </div>
-                    </div>
+      <div className="flex-1 relative">
+        <ScrollArea 
+          className="h-full" 
+          onScroll={handleScroll}
+          ref={scrollAreaRef}
+        >
+          <div className="p-4 space-y-4">
+            {messages.map((message, index) => (
+              <div key={message.id} ref={index === messages.length - 1 ? lastMessageRef : undefined}>
+                {message.isUnread && index > 0 && !messages[index - 1].isUnread && (
+                  <div className="flex items-center gap-2 py-2 text-sm text-primary">
+                    <div className="h-px flex-1 bg-primary/20" />
+                    <span>New messages</span>
+                    <div className="h-px flex-1 bg-primary/20" />
                   </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent>
-                  <EmojiPicker onEmojiSelect={(emoji) => handleReaction(message.id, emoji)}>
-                    <Button variant="ghost" className="w-full justify-start">
-                      Add Reaction
-                    </Button>
-                  </EmojiPicker>
-                </ContextMenuContent>
-              </ContextMenu>
+                )}
+                <ContextMenu>
+                  <ContextMenuTrigger>
+                    <Message message={message} />
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <EmojiPicker onEmojiSelect={(emoji) => handleReaction(message.id, emoji)}>
+                      <Button variant="ghost" className="w-full justify-start">
+                        Add Reaction
+                      </Button>
+                    </EmojiPicker>
+                  </ContextMenuContent>
+                </ContextMenu>
+              </div>
             ))}
           </div>
-          {messages.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <Hash className="w-12 h-12 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">Welcome to #{channel.name}</h3>
-              <p>This is the start of the channel</p>
-            </div>
-          )}
         </ScrollArea>
+
+        {/* Scroll to bottom button */}
+        {showScrollToBottom && (
+          <Button
+            variant="secondary"
+            size="sm"
+            className={cn(
+              "absolute bottom-4 right-4 gap-2 shadow-lg transition-opacity",
+              hasUnreadBelow ? "bg-primary text-primary-foreground" : ""
+            )}
+            onClick={scrollToBottom}
+          >
+            <ChevronDown className="h-4 w-4" />
+            {hasUnreadBelow ? "New messages" : "Scroll to bottom"}
+          </Button>
+        )}
       </div>
 
       <div className="p-4 border-t">

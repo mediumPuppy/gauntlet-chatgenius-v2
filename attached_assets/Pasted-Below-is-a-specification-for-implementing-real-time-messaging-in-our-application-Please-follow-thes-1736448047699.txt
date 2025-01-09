@@ -1,0 +1,51 @@
+Below is a specification for implementing real-time messaging in our application. Please follow these requirements carefully:
+
+1. AWS-Compatible WebSocket Framework Setup
+   - Integrate an AWS-compatible WebSocket solution (e.g., Amazon API Gateway WebSocket or AWS AppSync for real-time data).
+   - Ensure connections are authenticated with our existing user sessions.
+
+2. Real-Time Messages & Data Model Integration
+   - Use the "Message" model within models.json to represent each chat message.
+     - Required fields: id, channelId, userId, content, createdAt, etc.
+   - Ensure that new messages, edits, deletions, and reactions are broadcast to all connected clients in real time.
+
+3. Channel & DM Navigation
+   - Implement unique routing or a unique page for each Channel or DM using the "Channel" model from models.json.
+     - For a workspace channel, open /channel/:channelId.  
+     - For a DM, open /dm/:dmChannelId or a similar route.
+   - Handle route changes gracefully:
+     - Clear previously loaded messages when navigating to a new channel or DM.
+     - Fetch the new channel’s messages from the server before or after establishing the WebSocket connection.
+
+4. Loading Historical Messages
+   - On joining or switching to a channel or DM, retrieve recent message history via REST or GraphQL (if using AppSync).
+   - Display them in descending order by createdAt, matching the "messages_by_channel" index in models.json.
+
+5. Sending New Messages
+   - Provide a text input that, when submitted, creates a new “Message” record and sends it via WebSocket.
+   - Broadcast the new message to all subscribers of that channel.
+
+6. Real-Time Updates (Edits, Reactions, etc.)
+   - Listen for updates in message content, reactions, or attachments via the WebSocket connection.
+   - Synchronize these updates with the local state so all clients see changes in real time.
+
+7. Error Handling & Retry Logic
+   - Reconnect the WebSocket if the connection is lost or times out.
+   - Provide graceful error handling for message sends during downtime (e.g., queue them until reconnection).
+
+8. Security & Permissions
+   - Use the "Channel" model’s isPrivate, isDm, and members fields to gate access.
+   - Validate user access on each new message or channel subscription.
+   - Ensure that only workspace members can join channels or DMs within that workspace.
+
+9. Performance Considerations
+   - Limit the initial retrieved messages (e.g., 50 or 100) and lazy-load older messages on scroll-up.
+   - Optimize concurrency for high-traffic channels (e.g., batching or using partial updates).
+
+10. Testing & Metrics
+   - Create test channels and DM chats.
+   - Verify messages appear immediately for all participants.
+   - Confirm the WebSocket connection remains stable and reconnects automatically.
+   - Log the real-time communication metrics to ensure performance and reliability.
+
+Following these steps ensures we have a robust and AWS-compliant real-time messaging system leveraging the data structures and relationships in models.json.

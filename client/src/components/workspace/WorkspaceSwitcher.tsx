@@ -124,9 +124,6 @@ export default function WorkspaceSwitcher({
         title: "Switched Workspace",
         description: `Now viewing ${data.workspace.name}`,
       });
-
-      // Navigate to workspace overview
-      navigate(`/workspace/${workspaceId}`);
     } catch (error) {
       toast({
         title: "Error",

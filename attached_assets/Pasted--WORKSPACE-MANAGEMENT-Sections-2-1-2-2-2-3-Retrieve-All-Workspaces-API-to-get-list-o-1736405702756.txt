@@ -1,0 +1,126 @@
+• WORKSPACE MANAGEMENT (Sections 2.1, 2.2, 2.3)
+  - Retrieve All Workspaces:
+    - API to get list of workspaces (names, logos, membership).
+  - Switch Workspace:
+    - Endpoint to update active workspace context for the user.
+  - Workspace Overview Data:
+    - Endpoints for stats (channel count, member count, announcements).
+    - Endpoint for pinned messages or short announcements.
+  - Admin Panel:
+    - Members Management: add/remove users, edit roles.
+    - Workspace Settings: default channel permissions, message/file retention policies.
+    - Integrations: add/remove apps/webhooks, manage AI or bedrock integrations.
+    - Audit Log: endpoint returning system changes/time stamps.
+
+• CHANNELS & MESSAGING (Sections 3.1, 3.2, 3.3, 3.4, 3.5, 3.6)
+  - Channel List:
+    - API to fetch user’s channels, starred/favorite flags, unread counts.
+    - “…” menu calls: mute, mark as read, leave channel, etc.
+  - Channel Header & Info:
+    - Fetch channel metadata (topic, pinned topics, membership list).
+    - Search in channel: endpoint to query messages within that channel.
+  - Messages & Threads:
+    - Get/Post messages (with user info/time stamps).
+    - Infinite scroll or pagination for older messages.
+    - Thread support with “Reply in thread” sub-endpoints.
+  - Message Composer:
+    - Basic text posting plus uploading attachments to message endpoints.
+  - Mentions & Notifications:
+    - Highlight user mentions, track unread mentions.
+    - APIs to notify or retrieve mention notifications.
+
+• DIRECT MESSAGES (Sections 4.1, 4.2)
+  - Direct Message Listing:
+    - Endpoint for DM participants, unread status, and partial conversation previews.
+  - DM Conversation:
+    - Identical to channel messaging, but private 1:1 or small group.
+    - Option to convert to private channel (admin flow).
+
+• FILE MANAGEMENT (Sections 5.1, 5.2)
+  - File Browser:
+    - API to fetch file list (with sorting, filtering by date/type/size).
+  - File Upload:
+    - Endpoint or direct upload with metadata (thumbnail, file name, permissions).
+  - File Preview:
+    - Retrieve file details (name, size, type, access).
+    - Download or “Open in new tab” links.
+    - Generate/copy shareable link if role-based or presigned URLs are supported.
+
+• TASKS & TASK MANAGEMENT (Sections 6.1, 6.2, 6.3)
+  - Task Board / Kanban:
+    - Create/read/update/delete tasks with statuses (Open, In Progress, Complete).
+    - Return task cards, assigned users, due dates, short descriptions.
+  - Task Details:
+    - Full description field, attachments, channel/message references.
+    - Endpoint to edit task contents (due date, assignees).
+  - Quick Task Creation:
+    - Lightweight form to create tasks directly from a channel message or mention.
+
+• SEARCH & AI FEATURES (Sections 7.1, 7.2, 7.3)
+  - Global Search:
+    - Endpoint for searching users, channels, messages, files with optional filters.
+    - Auto-complete suggestions for top results.
+  - AI-Assisted Summaries:
+    - Trigger to generate “Channel Summary” or “Thread Summary” from recent conversation data.
+    - Possibly specialized endpoint or model integration for text summarization.
+  - Chatbot / AI Assistant:
+    - A dedicated conversation endpoint for AI queries.
+    - Context may include workspace data (channels, tasks, files).
+
+• USER PROFILES & PREFERENCES (Sections 8.1, 8.2, 8.3)
+  - Profile Menu:
+    - Get user info (avatar, display name, status).
+    - Quick updates to user status or availability.
+  - Profile Modal:
+    - Edit user details (email, phone, avatar, etc.).
+  - Preferences Screen:
+    - Notification settings (desktop, email, mobile, quiet hours).
+    - Theme and accessibility toggles (light/dark, high contrast).
+    - Privacy controls (DM allowances, read receipts).
+
+• NOTIFICATIONS & ACTIVITY FEEDS (Section 9.1)
+  - Notification Pane:
+    - API to fetch recent mentions/activity across channels and DMs.
+    - “Mark all as read” endpoint.
+    - System-born events (e.g., new file shared, channel invites).
+
+• ADMIN & ANALYTICS DASHBOARDS (Sections 10.1, 10.2)
+  - Analytics Overview:
+    - Endpoints returning usage metrics (messages sent, active users, file uploads).
+    - Date-range filters for data queries.
+  - Deeper Reports:
+    - Tabbed or filtered data (channel growth, storage usage, AI usage).
+    - CSV/PDF export endpoints.
+
+• MODALS & ERROR HANDLING (Sections 11.1, 11.2)
+  - Confirmation Modals:
+    - Typically no separate endpoint, but used before destructive API calls (delete channel, remove user).
+  - Inline Error States:
+    - Distinct error codes/responses for form validation or system issues.
+    - Graceful handling in UI for server errors or connectivity problems.
+
+• RESPONSIVENESS & ACCESSIBILITY (Sections 12.1, 12.2, 12.3)
+  - No dedicated backend calls; mainly front-end adjustments.
+  - Potential endpoints for user preference storage (like layout or toggle states).
+  - ARIA or accessibility metadata stored client-side or as user preference.
+
+• THEMES & CUSTOMIZATION (Sections 13.1, 13.2)
+  - Store user-selected theme (light/dark) and brand color preferences.
+  - If admin branding is enabled, an endpoint to upload logos or set brand color palettes.
+
+• ADDITIONAL BEST PRACTICES (Section 14)
+  - Logging & security for inactivity, session expiry, token refresh.
+  - Provide help/support links or knowledge base references (may call a CMS or external doc link).
+
+• AUTHENTICATION & ONBOARDING (Sections 1.1, 1.2, 1.3) (Build Last)
+  - Login:
+    - Validate credentials (POST to auth endpoint) – for now, we mock with JSON.
+    - Potential error messages for invalid or locked accounts.
+    - “Forgot Password?” flow hits a password-reset endpoint.
+    - “Sign Up” flow, if open registration is allowed.
+  - Multi-Factor Authentication:
+    - Request & verify codes (backup code, resend code).
+    - Minimal friction approach (e.g., single-step or modal).
+  - First-Time User Onboarding:
+    - Walk-through slides or data indicating user’s first-time status.
+    - “Skip Tour” toggle stored on server or local settings.

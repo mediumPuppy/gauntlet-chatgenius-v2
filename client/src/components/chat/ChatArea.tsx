@@ -3,15 +3,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import MessageInput from "./MessageInput";
 import { Button } from "@/components/ui/button";
-import { 
-  Hash, 
-  Bot, 
-  Pin, 
-  Users, 
+import {
+  Hash,
+  Bot,
+  Pin,
+  Users,
   Search,
   Info,
   MessageSquare,
-  X
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -27,6 +27,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import EmojiPicker from "./EmojiPicker";
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -91,7 +92,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       threadCount: 0,
       thread: []
     }
-  ]); 
+  ]);
 
   const [showSearch, setShowSearch] = useState(false);
   const [activeThread, setActiveThread] = useState<string | null>(null);
@@ -114,7 +115,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
     );
   }
 
-  const activeThreadMessage = activeThread 
+  const activeThreadMessage = activeThread
     ? messages.find(m => m.id === activeThread)
     : null;
 
@@ -134,8 +135,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             <p className="text-sm text-muted-foreground mt-1">{channel.topic}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               onClick={() => setShowSearch(!showSearch)}
             >
@@ -228,16 +229,16 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                             else setActiveThread(message.id);
                           }}>
                             <SheetTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className={cn(
                                   "text-xs gap-1",
                                   message.threadCount > 0 ? "text-primary" : "text-muted-foreground"
                                 )}
                               >
                                 <MessageSquare className="w-4 h-4" />
-                                {message.threadCount > 0 
+                                {message.threadCount > 0
                                   ? `${message.threadCount} ${message.threadCount === 1 ? 'reply' : 'replies'}`
                                   : 'Reply in thread'
                                 }
@@ -286,8 +287,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
                               {/* Thread Input */}
                               <div className="mt-4">
-                                <MessageInput 
-                                  channelId={channelId} 
+                                <MessageInput
+                                  channelId={channelId}
                                   channelName={`Thread in ${channel.name}`}
                                 />
                               </div>
@@ -299,15 +300,11 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <ContextMenuItem onClick={() => handleReaction(message.id, '👍')}>
-                    Add 👍
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => handleReaction(message.id, '🎉')}>
-                    Add 🎉
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => handleReaction(message.id, '❤️')}>
-                    Add ❤️
-                  </ContextMenuItem>
+                  <EmojiPicker onEmojiSelect={(emoji) => handleReaction(message.id, emoji)}>
+                    <Button variant="ghost" className="w-full justify-start">
+                      Add Reaction
+                    </Button>
+                  </EmojiPicker>
                 </ContextMenuContent>
               </ContextMenu>
             ))}

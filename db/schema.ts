@@ -144,13 +144,37 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   channelId: integer("channel_id").notNull().references(() => channels.id, { onDelete: 'cascade' }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  rootMessageId: integer("root_message_id").references(() => messages.id, { onDelete: 'cascade' }),
+  parentId: integer("parent_id").references(() => messages.id, { onDelete: 'cascade' }),
   content: text("content").notNull(),
   isEdited: boolean("is_edited").default(false),
   editedAt: timestamp("edited_at"),
+  deletedAt: timestamp("deleted_at"),
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   version: integer("version").notNull().default(1),
 });
+
+// Update message relations to include thread relationships
+export const messageRelations = relations(messages, ({ one, many }) => ({
+  channel: one(channels, {
+    fields: [messages.channelId],
+    references: [channels.id],
+  }),
+  author: one(users, {
+    fields: [messages.userId],
+    references: [users.id],
+  }),
+  parent: one(messages, {
+    fields: [messages.parentId],
+    references: [messages.id],
+  }),
+  root: one(messages, {
+    fields: [messages.rootMessageId],
+    references: [messages.id],
+  }),
+  replies: many(messages, { relationName: "threadReplies" }),
+}));
 
 // Define relationships
 export const userRelations = relations(users, ({ one, many }) => ({
@@ -189,17 +213,6 @@ export const channelRelations = relations(channels, ({ one, many }) => ({
     references: [workspaces.id],
   }),
   messages: many(messages),
-}));
-
-export const messageRelations = relations(messages, ({ one }) => ({
-  channel: one(channels, {
-    fields: [messages.channelId],
-    references: [channels.id],
-  }),
-  author: one(users, {
-    fields: [messages.userId],
-    references: [users.id],
-  }),
 }));
 
 

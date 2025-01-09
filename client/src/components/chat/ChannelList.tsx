@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
 import { getStatusColor } from "@/lib/utils";
+import { NotificationSection } from "@/components/notifications/NotificationSection";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -297,6 +298,9 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
             showAdd={false}
           />
         )}
+
+        {/* Notifications Section */}
+        <NotificationSection />
 
         {/* Regular Channels */}
         <ChannelSection

@@ -288,6 +288,9 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
   return (
     <>
       <div className="p-2 space-y-4">
+        {/* Notifications Section - Now above Starred */}
+        <NotificationSection />
+
         {/* Starred Channels */}
         {channels.starred.length > 0 && (
           <ChannelSection
@@ -298,9 +301,6 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
             showAdd={false}
           />
         )}
-
-        {/* Notifications Section */}
-        <NotificationSection />
 
         {/* Regular Channels */}
         <ChannelSection

@@ -18,6 +18,10 @@ const updateWorkspaceSchema = z.object({
   settings: z.record(z.unknown()).optional(),
 });
 
+const switchWorkspaceSchema = z.object({
+  workspaceId: z.number(),
+});
+
 export function registerRoutes(app: Express): Server {
   // Get all workspaces for the current user
   app.get("/api/workspaces", async (req, res) => {
@@ -94,7 +98,6 @@ export function registerRoutes(app: Express): Server {
         settings: workspace.settings,
         owner: {
           id: userId,
-          // TODO: Get actual username when auth is implemented
           username: 'currentuser',
         },
       });
@@ -110,7 +113,7 @@ export function registerRoutes(app: Express): Server {
   // Switch active workspace
   app.post("/api/workspaces/switch", async (req, res) => {
     try {
-      const { workspaceId } = req.body;
+      const { workspaceId } = switchWorkspaceSchema.parse(req.body);
       const userId = 1; // TODO: Replace with actual user ID from auth
 
       // Verify workspace exists and user is a member
@@ -128,10 +131,13 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: 'Access denied to this workspace' });
       }
 
-      // Store active workspace in session
-      if (req.session) {
-        req.session.activeWorkspaceId = workspaceId;
+      // Initialize session if it doesn't exist
+      if (!req.session) {
+        return res.status(500).json({ message: 'Session not initialized' });
       }
+
+      // Store active workspace in session
+      req.session.activeWorkspaceId = workspaceId;
 
       res.json({ 
         message: 'Successfully switched workspace',
@@ -142,6 +148,9 @@ export function registerRoutes(app: Express): Server {
         }
       });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid workspace ID', errors: error.errors });
+      }
       console.error('Error switching workspace:', error);
       res.status(500).json({ message: 'Failed to switch workspace' });
     }

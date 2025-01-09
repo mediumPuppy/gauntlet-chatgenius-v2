@@ -79,6 +79,9 @@ export default function WorkspaceSwitcher({
       });
       setIsCreateOpen(false);
       setNewWorkspaceName("");
+
+      // Switch to the newly created workspace
+      handleWorkspaceSelect(data.id);
     },
     onError: (error) => {
       toast({
@@ -103,13 +106,27 @@ export default function WorkspaceSwitcher({
       }
 
       const data = await res.json();
+
+      // Update the active workspace in React Query cache
+      queryClient.setQueryData(["/api/workspaces"], (oldData: Workspace[] | undefined) => {
+        if (!oldData) return oldData;
+        return oldData.map(workspace => ({
+          ...workspace,
+          isActive: workspace.id === workspaceId
+        }));
+      });
+
+      // Refresh workspace data
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
+
+      // Show success toast
       toast({
         title: "Switched Workspace",
         description: `Now viewing ${data.workspace.name}`,
       });
 
-      // Refresh workspace data
-      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
+      // Navigate to workspace overview
+      navigate(`/workspace/${workspaceId}`);
     } catch (error) {
       toast({
         title: "Error",
@@ -122,10 +139,10 @@ export default function WorkspaceSwitcher({
   const handleActionSelect = (action: string) => {
     switch (action) {
       case 'settings':
-        navigate(`/workspace/${activeWorkspaceId}/admin`);
+        navigate(`/workspace/${activeWorkspace?.id}/admin`);
         break;
       case 'overview':
-        navigate(`/workspace/${activeWorkspaceId}`);
+        navigate(`/workspace/${activeWorkspace?.id}`);
         break;
       case 'leave':
         // TODO: Implement leave workspace functionality

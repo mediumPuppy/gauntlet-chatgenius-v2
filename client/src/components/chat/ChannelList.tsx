@@ -24,6 +24,9 @@ import { getStatusColor } from "@/lib/utils";
 import { NotificationSection } from "@/components/notifications/NotificationSection";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { CreateChannelDialog } from "./CreateChannelDialog";
+import { JoinChannelDialog } from "./JoinChannelDialog";
+import { CreateDMDialog } from "./CreateDMDialog";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -180,9 +183,21 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               )} />
               Channels
             </button>
-            <Button variant="ghost" size="icon" className="w-6 h-6">
-              <Plus className="w-4 h-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-6 h-6">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem asChild>
+                  <CreateChannelDialog />
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <JoinChannelDialog />
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           {expandedSections.channels && groupedChannels?.channels.map((channel) => (
             <ChannelItem 
@@ -206,9 +221,13 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               )} />
               Direct Messages
             </button>
-            <Button variant="ghost" size="icon" className="w-6 h-6">
-              <Plus className="w-4 h-4" />
-            </Button>
+            <CreateDMDialog
+              trigger={
+                <Button variant="ghost" size="icon" className="w-6 h-6">
+                  <Plus className="w-4 h-4" />
+                </Button>
+              }
+            />
           </div>
           {expandedSections.directMessages && groupedChannels?.directMessages.map((channel) => (
             <ChannelItem 

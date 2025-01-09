@@ -1,0 +1,282 @@
+{
+  "vectorStorage": {
+    "models": {
+      "MessageEmbeddings": {
+        "id": "string",
+        "messageId": {
+          "type": "string",
+          "reference": "Message.id"
+        },
+        "workspaceId": {
+          "type": "string",
+          "reference": "Workspace.id"
+        },
+        "channelId": {
+          "type": "string",
+          "reference": "Channel.id"
+        },
+        "content": "string",
+        "embedding": "vector",
+        "contextWindow": {
+          "previousMessages": ["string"],
+          "nextMessages": ["string"],
+          "threadContext": "string"
+        },
+        "metadata": {
+          "messageType": "string",
+          "hasAttachments": "boolean",
+          "participantCount": "number",
+          "threadDepth": "number",
+          "timestamp": "timestamp"
+        },
+        "bedrockMeta": {
+          "modelId": "string",
+          "inferenceTime": "number",
+          "tokenCount": "number",
+          "requestId": "string",
+          "modelVersion": "string",
+          "processingTaskId": "string"
+        },
+        "createdAt": "timestamp"
+      },
+
+      "AIMessageAnalysis": {
+        "id": "string",
+        "messageId": {
+          "type": "string",
+          "reference": "Message.id"
+        },
+        "analysis": {
+          "toxicity": "number",
+          "harassment": "number",
+          "profanity": "number",
+          "hate": "number",
+          "threats": "number"
+        },
+        "aiMetadata": {
+          "model": "string",
+          "confidence": "number",
+          "context": ["string"],
+          "semantic": {
+            "topics": ["string"],
+            "entities": [{
+              "text": "string",
+              "type": "string",
+              "confidence": "number"
+            }],
+            "sentiment": {
+              "score": "number",
+              "labels": ["string"]
+            },
+            "intent": {
+              "type": "string",
+              "confidence": "number"
+            }
+          },
+          "moderation": {
+            "flags": [{
+              "type": "string",
+              "confidence": "number"
+            }],
+            "status": "string"
+          },
+          "summary": {
+            "text": "string",
+            "keyPoints": ["string"]
+          }
+        },
+        "embedding": "vector",
+        "createdAt": "timestamp"
+      },
+
+      "ConversationSummary": {
+        "id": "string",
+        "channelId": {
+          "type": "string",
+          "reference": "Channel.id"
+        },
+        "timeframe": {
+          "startAt": "timestamp",
+          "endAt": "timestamp"
+        },
+        "summary": {
+          "text": "string",
+          "topics": ["string"],
+          "keyPoints": ["string"],
+          "decisions": ["string"],
+          "actionItems": [{
+            "text": "string",
+            "assignedTo": ["string"],
+            "dueDate": "timestamp"
+          }]
+        },
+        "topicEmbedding": "vector",
+        "contentEmbedding": "vector",
+        "history": [{
+          "generatedAt": "timestamp",
+          "summaryText": "string"
+        }],
+        "schedule": {
+          "frequency": "string",
+          "nextRun": "timestamp"
+        },
+        "messageIds": ["string"],
+        "generatedBy": {
+          "type": "string",
+          "reference": "User.id"
+        },
+        "createdAt": "timestamp"
+      },
+
+      "UserBehaviorProfile": {
+        "id": "string",
+        "userId": {
+          "type": "string",
+          "reference": "User.id"
+        },
+        "workspaceId": {
+          "type": "string",
+          "reference": "Workspace.id"
+        },
+        "interactionStyle": {
+          "communicationPattern": "vector",
+          "topicPreferences": "vector",
+          "temporalPatterns": "vector",
+          "collaborationStyle": "vector"
+        },
+        "expertise": [{
+          "domain": "string",
+          "confidenceScore": "number",
+          "topicEmbedding": "vector"
+        }],
+        "relationships": [{
+          "withUserId": {
+            "type": "string",
+            "reference": "User.id"
+          },
+          "strengthScore": "number",
+          "interactionPattern": "vector"
+        }],
+        "updatedAt": "timestamp"
+      },
+
+      "DocumentUnderstanding": {
+        "id": "string",
+        "fileId": {
+          "type": "string",
+          "reference": "File.id"
+        },
+        "workspaceId": {
+          "type": "string",
+          "reference": "Workspace.id"
+        },
+        "chunks": [{
+          "content": "string",
+          "embedding": "vector",
+          "pageNumber": "number",
+          "position": {
+            "x": "number",
+            "y": "number",
+            "width": "number",
+            "height": "number"
+          }
+        }],
+        "structure": {
+          "tableOfContents": "vector",
+          "keyTopics": ["vector"],
+          "relationships": ["vector"]
+        },
+        "metadata": {
+          "documentType": "string",
+          "confidence": "number",
+          "processingStatus": "string"
+        },
+        "createdAt": "timestamp"
+      },
+
+      "AIPromptLog": {
+        "id": "string",
+        "messageId": {
+          "type": "string",
+          "reference": "Message.id"
+        },
+        "prompt": "string",
+        "chainOfThought": "string",
+        "response": "string",
+        "promptEmbedding": "vector",
+        "responseEmbedding": "vector",
+        "usageId": {
+          "type": "string",
+          "reference": "AIUsage.id"
+        },
+        "createdAt": "timestamp"
+      },
+
+      "AIUsage": {
+        "id": "string",
+        "workspaceId": {
+          "type": "string",
+          "reference": "Workspace.id"
+        },
+        "userId": {
+          "type": "string",
+          "reference": "User.id"
+        },
+        "timestamp": "timestamp",
+        "operation": "string",
+        "tokensUsed": "number",
+        "responseTimeMs": "number",
+        "costUsd": "number"
+      }
+    },
+
+    "indexes": {
+      "message_semantic": {
+        "model": "MessageEmbeddings",
+        "fields": ["embedding"],
+        "type": "vector",
+        "dimensions": 1536,
+        "metric": "cosine"
+      },
+      "message_analysis": {
+        "model": "AIMessageAnalysis",
+        "fields": ["embedding"],
+        "type": "vector",
+        "dimensions": 1536,
+        "metric": "cosine"
+      },
+      "conversation_topics": {
+        "model": "ConversationSummary",
+        "fields": ["topicEmbedding", "contentEmbedding"],
+        "type": "vector",
+        "dimensions": 1536,
+        "metric": "cosine"
+      },
+      "user_behavior": {
+        "model": "UserBehaviorProfile",
+        "fields": [
+          "interactionStyle.communicationPattern",
+          "interactionStyle.topicPreferences",
+          "expertise.topicEmbedding"
+        ],
+        "type": "vector",
+        "dimensions": 768,
+        "metric": "euclidean"
+      },
+      "document_chunks": {
+        "model": "DocumentUnderstanding",
+        "fields": ["chunks.embedding"],
+        "type": "vector",
+        "dimensions": 1536,
+        "metric": "cosine"
+      },
+      "prompt_response": {
+        "model": "AIPromptLog",
+        "fields": ["promptEmbedding", "responseEmbedding"],
+        "type": "vector",
+        "dimensions": 1536,
+        "metric": "cosine"
+      }
+    }
+  }
+}

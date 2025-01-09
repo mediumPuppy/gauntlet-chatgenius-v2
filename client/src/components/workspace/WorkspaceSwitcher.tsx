@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 interface Workspace {
   id: number;
@@ -35,18 +36,13 @@ interface Workspace {
   };
 }
 
-interface WorkspaceSwitcherProps {
-  activeWorkspaceId?: number;
-}
-
-export default function WorkspaceSwitcher({ 
-  activeWorkspaceId,
-}: WorkspaceSwitcherProps) {
+export default function WorkspaceSwitcher() {
   const [, navigate] = useLocation();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newWorkspaceName, setNewWorkspaceName] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { activeWorkspaceId, setActiveWorkspaceId } = useWorkspace();
 
   // Fetch workspaces data
   const { data: workspaces = [], isLoading } = useQuery<Workspace[]>({
@@ -107,23 +103,17 @@ export default function WorkspaceSwitcher({
 
       const data = await res.json();
 
-      // Update the active workspace in React Query cache
-      queryClient.setQueryData(["/api/workspaces"], (oldData: Workspace[] | undefined) => {
-        if (!oldData) return oldData;
-        return oldData.map(workspace => ({
-          ...workspace,
-          isActive: workspace.id === workspaceId
-        }));
-      });
-
-      // Refresh workspace data
-      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
+      // Update the global workspace context
+      setActiveWorkspaceId(workspaceId);
 
       // Show success toast
       toast({
         title: "Switched Workspace",
         description: `Now viewing ${data.workspace.name}`,
       });
+
+      // Refresh workspace data
+      queryClient.invalidateQueries({ queryKey: ["/api/workspaces"] });
     } catch (error) {
       toast({
         title: "Error",

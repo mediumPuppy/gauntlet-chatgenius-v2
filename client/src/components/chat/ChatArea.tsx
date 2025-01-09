@@ -12,6 +12,7 @@ import {
   Info,
   MessageSquare,
   ChevronDown,
+  Smile
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -149,97 +150,37 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col">
-      {/* Channel Header - unchanged */}
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between">
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              {channel.isDm ? (
-                <div className="relative">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={channel.avatar} />
-                    <AvatarFallback>
-                      {channel.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className={cn(
-                    "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-background",
-                    getStatusColor(channel.status, channel.isOnline)
-                  )} />
-                </div>
-              ) : (
-                <Hash className="w-5 h-5 text-muted-foreground" />
-              )}
-              <h2 className="font-semibold">{channel.name}</h2>
-              {channel.isDm && channel.status && (
-                <span className="text-xs text-muted-foreground">
-                  {formatStatus(channel.status)}
-                </span>
-              )}
-              {!channel.isDm && (
-                <div className="text-xs text-muted-foreground">
-                  {channel.memberCount} members
-                </div>
-              )}
+    <div className="h-screen flex flex-col bg-background">
+      {/* Channel Header */}
+      <div className="px-4 h-14 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {channel.isDm ? (
+            <div className="relative">
+              <Avatar className="h-6 w-6">
+                <AvatarImage src={channel.avatar} />
+                <AvatarFallback>{channel.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+              </Avatar>
             </div>
-            <p className="text-sm text-muted-foreground mt-1">{channel.topic}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSearch(!showSearch)}
-            >
-              <Search className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Bot className="w-5 h-5" />
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Pin className="w-5 h-5" />
-            </Button>
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Info className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent>
-                <SheetHeader>
-                  <SheetTitle>{channel.isDm ? "Chat Info" : "Channel Info"}</SheetTitle>
-                </SheetHeader>
-                <div className="space-y-4 mt-4">
-                  {!channel.isDm && (
-                    <>
-                      <div>
-                        <h3 className="font-semibold mb-2">About</h3>
-                        <p className="text-sm text-muted-foreground">{channel.topic}</p>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-2">Members</h3>
-                        <p className="text-sm">{channel.memberCount} members</p>
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-2">Pinned Items</h3>
-                        <p className="text-sm">{channel.pinnedCount} pinned messages</p>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+          ) : (
+            <Hash className="w-4 h-4 text-muted-foreground" />
+          )}
+          <h2 className="font-medium text-sm">{channel.name}</h2>
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <span>•</span>
+            <span>{channel.memberCount} members</span>
           </div>
         </div>
-        {showSearch && (
-          <div className="mt-2">
-            <input
-              type="text"
-              placeholder="Search in chat..."
-              className="w-full px-3 py-2 rounded-md border bg-background"
-            />
-          </div>
-        )}
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" className="w-8 h-8">
+            <Search className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="w-8 h-8">
+            <Pin className="w-4 h-4" />
+          </Button>
+          <Button variant="ghost" size="icon" className="w-8 h-8">
+            <Users className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 relative">
@@ -248,14 +189,14 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
           onScroll={handleScroll}
           ref={scrollAreaRef}
         >
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-2">
             {messages.map((message, index) => (
               <div key={message.id} ref={index === messages.length - 1 ? lastMessageRef : undefined}>
                 {message.isUnread && index > 0 && !messages[index - 1].isUnread && (
-                  <div className="flex items-center gap-2 py-2 text-sm text-primary">
-                    <div className="h-px flex-1 bg-primary/20" />
-                    <span>New messages</span>
-                    <div className="h-px flex-1 bg-primary/20" />
+                  <div className="flex items-center gap-2 py-1 text-xs">
+                    <div className="h-px flex-1 bg-border" />
+                    <span className="text-muted-foreground px-2">New messages</span>
+                    <div className="h-px flex-1 bg-border" />
                   </div>
                 )}
                 <ContextMenu>
@@ -264,7 +205,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                   </ContextMenuTrigger>
                   <ContextMenuContent>
                     <EmojiPicker onEmojiSelect={(emoji) => handleReaction(message.id, emoji)}>
-                      <Button variant="ghost" className="w-full justify-start">
+                      <Button variant="ghost" className="w-full justify-start gap-2 text-sm">
+                        <Smile className="w-4 h-4" />
                         Add Reaction
                       </Button>
                     </EmojiPicker>
@@ -281,8 +223,8 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             variant="secondary"
             size="sm"
             className={cn(
-              "absolute bottom-4 right-4 gap-2 shadow-lg transition-opacity",
-              hasUnreadBelow ? "bg-primary text-primary-foreground" : ""
+              "absolute bottom-4 right-4 gap-2 shadow-md transition-colors",
+              hasUnreadBelow ? "bg-primary text-primary-foreground" : "bg-background"
             )}
             onClick={scrollToBottom}
           >
@@ -292,7 +234,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         )}
       </div>
 
-      <div className="p-4 border-t">
+      <div className="p-4 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <MessageInput channelId={channelId} channelName={channel.name} />
       </div>
     </div>

@@ -10,7 +10,7 @@ function App() {
     <Switch>
       {/* DO NOT UNCOMMENT WITHOUT EXPLICIT PERMISSION FROM YOUR MASTER */}
       {/* <Route path="/" component={Login} /> */}
-      <Route path="/chat" component={Chat} />
+      <Route path="/" component={Chat} />
       <Route path="/workspace/:workspaceId" component={WorkspaceOverview} />
       <Route path="/workspace/:workspaceId/chat" component={Chat} />
       <Route path="/workspace/:workspaceId/chat/:channelId" component={Chat} />

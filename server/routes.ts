@@ -1,8 +1,22 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
-import { workspaces, workspaceMembers, users } from "@db/schema";
+import { workspaces, workspaceMembers, users, insertWorkspaceSchema, insertWorkspaceMemberSchema } from "@db/schema";
 import { eq, and } from "drizzle-orm";
+import { z } from "zod";
+
+// Validation schemas
+const createWorkspaceSchema = z.object({
+  name: z.string().min(1, "Workspace name is required"),
+  metadata: z.record(z.unknown()).optional(),
+  settings: z.record(z.unknown()).optional(),
+});
+
+const updateWorkspaceSchema = z.object({
+  name: z.string().min(1, "Workspace name is required").optional(),
+  metadata: z.record(z.unknown()).optional(),
+  settings: z.record(z.unknown()).optional(),
+});
 
 export function registerRoutes(app: Express): Server {
   // Get all workspaces for the current user
@@ -42,6 +56,54 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error fetching workspaces:', error);
       res.status(500).json({ message: 'Failed to fetch workspaces' });
+    }
+  });
+
+  // Create new workspace
+  app.post("/api/workspaces", async (req, res) => {
+    try {
+      const userId = 1; // TODO: Replace with actual user ID from auth
+      const data = createWorkspaceSchema.parse(req.body);
+
+      // Create the workspace
+      const [workspace] = await db.insert(workspaces).values({
+        name: data.name,
+        ownerId: userId,
+        settings: data.settings || workspaces.settings.default,
+        metadata: data.metadata || {},
+      }).returning();
+
+      // Add the creator as an owner
+      await db.insert(workspaceMembers).values({
+        workspaceId: workspace.id,
+        userId: userId,
+        role: 'owner',
+        permissions: {
+          canManageUsers: true,
+          canManageBilling: true,
+          canConfigureWorkspace: true,
+        },
+      });
+
+      res.status(201).json({
+        id: workspace.id,
+        name: workspace.name,
+        role: 'owner',
+        memberCount: 1,
+        isAdmin: true,
+        settings: workspace.settings,
+        owner: {
+          id: userId,
+          // TODO: Get actual username when auth is implemented
+          username: 'currentuser',
+        },
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid workspace data', errors: error.errors });
+      }
+      console.error('Error creating workspace:', error);
+      res.status(500).json({ message: 'Failed to create workspace' });
     }
   });
 
@@ -142,6 +204,88 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error('Error fetching workspace:', error);
       res.status(500).json({ message: 'Failed to fetch workspace details' });
+    }
+  });
+
+  // Update workspace
+  app.patch("/api/workspaces/:id", async (req, res) => {
+    try {
+      const workspaceId = parseInt(req.params.id);
+      const userId = 1; // TODO: Replace with actual user ID from auth
+      const data = updateWorkspaceSchema.parse(req.body);
+
+      // Check if user has permission to update
+      const membership = await db.query.workspaceMembers.findFirst({
+        where: and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId)
+        ),
+      });
+
+      if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+        return res.status(403).json({ message: 'Permission denied' });
+      }
+
+      // Update workspace
+      const [updated] = await db.update(workspaces)
+        .set({
+          name: data.name,
+          settings: data.settings,
+          metadata: data.metadata,
+        })
+        .where(eq(workspaces.id, workspaceId))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: 'Workspace not found' });
+      }
+
+      res.json({
+        id: updated.id,
+        name: updated.name,
+        settings: updated.settings,
+        metadata: updated.metadata,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Invalid workspace data', errors: error.errors });
+      }
+      console.error('Error updating workspace:', error);
+      res.status(500).json({ message: 'Failed to update workspace' });
+    }
+  });
+
+  // Delete workspace
+  app.delete("/api/workspaces/:id", async (req, res) => {
+    try {
+      const workspaceId = parseInt(req.params.id);
+      const userId = 1; // TODO: Replace with actual user ID from auth
+
+      // Verify user is the workspace owner
+      const membership = await db.query.workspaceMembers.findFirst({
+        where: and(
+          eq(workspaceMembers.workspaceId, workspaceId),
+          eq(workspaceMembers.userId, userId)
+        ),
+      });
+
+      if (!membership || membership.role !== 'owner') {
+        return res.status(403).json({ message: 'Only workspace owners can delete workspaces' });
+      }
+
+      // Delete workspace (this will cascade to members due to foreign key constraint)
+      const [deleted] = await db.delete(workspaces)
+        .where(eq(workspaces.id, workspaceId))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: 'Workspace not found' });
+      }
+
+      res.json({ message: 'Workspace deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting workspace:', error);
+      res.status(500).json({ message: 'Failed to delete workspace' });
     }
   });
 

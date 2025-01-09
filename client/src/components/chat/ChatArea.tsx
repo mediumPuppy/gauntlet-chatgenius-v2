@@ -1,5 +1,4 @@
 import { useState } from "react";
-import MessageInput from "./MessageInput";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
 import { Button } from "@/components/ui/button";
@@ -43,7 +42,6 @@ interface ChatAreaProps {
   channelId: string | null;
 }
 
-// This is just for the getChannelInfo function, will be replaced with real data later
 const channels = {
   starred: [
     { id: "1", name: "announcements", isPrivate: false, unreadCount: 2 },
@@ -94,7 +92,6 @@ const channels = {
   ],
 };
 
-// Mock function to get channel info - will be replaced with real data later
 const getChannelInfo = (channelId: string) => {
   const allChannels = [
     ...channels.starred,
@@ -162,13 +159,12 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   const handleReaction = (messageId: string, emoji: string) => {
     console.log(`Adding reaction ${emoji} to message ${messageId}`);
-    // Will be implemented with real data later
   };
 
-  const handleMessageSend = (content: any, files?: any[]) => {
+  const handleMessageSend = (content: any, files?: any[], isThread: boolean = false) => {
     console.log("Message sent:", content);
     console.log("Files:", files);
-    // Will be implemented with real data handling later
+    console.log("Is thread message:", isThread);
   };
 
   if (!channelId || !channel) {
@@ -181,7 +177,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
 
   return (
     <div className="h-screen flex flex-col">
-      {/* Enhanced Channel/DM Header */}
       <div className="p-4 border-b">
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
@@ -404,9 +399,9 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                               </ScrollArea>
 
                               <div className="mt-4">
-                                <MessageInput
-                                  channelId={channelId}
-                                  channelName={`Thread in ${channel.name}`}
+                                <MessageComposer
+                                  onSend={(content, files) => handleMessageSend(content, files, true)}
+                                  placeholder={`Reply in thread in ${channel.name}`}
                                 />
                               </div>
                             </SheetContent>

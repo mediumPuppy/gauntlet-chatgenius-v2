@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Message from "./Message";
-import MessageInput from "./MessageInput";
 import { Button } from "@/components/ui/button";
 import {
   Hash,
@@ -27,9 +26,12 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import EmojiPicker from "./EmojiPicker";
+import { MessageComposer } from '@/components/message/MessageComposer';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getStatusColor, formatStatus } from "@/lib/utils";
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -47,9 +49,9 @@ const channels = {
     { id: "5", name: "team-only", isPrivate: true, unreadCount: 3 },
   ],
   directMessages: [
-    { 
-      id: "6", 
-      name: "Jane Smith", 
+    {
+      id: "6",
+      name: "Jane Smith",
       avatar: "https://example.com/jane.jpg",
       status: {
         text: "In a meeting",
@@ -57,11 +59,11 @@ const channels = {
         lastActive: new Date().toISOString()
       },
       isOnline: true,
-      unreadCount: 1 
+      unreadCount: 1
     },
-    { 
-      id: "7", 
-      name: "John Doe", 
+    {
+      id: "7",
+      name: "John Doe",
       avatar: "https://example.com/john.jpg",
       status: {
         text: "Away",
@@ -69,11 +71,11 @@ const channels = {
         lastActive: new Date(Date.now() - 3600000).toISOString()
       },
       isOnline: false,
-      unreadCount: 0 
+      unreadCount: 0
     },
-    { 
-      id: "8", 
-      name: "Alice Johnson", 
+    {
+      id: "8",
+      name: "Alice Johnson",
       avatar: "https://example.com/alice.jpg",
       status: {
         text: "Available",
@@ -81,7 +83,7 @@ const channels = {
         lastActive: new Date().toISOString()
       },
       isOnline: true,
-      unreadCount: 4 
+      unreadCount: 4
     }
   ],
 };
@@ -155,6 +157,12 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
   const handleReaction = (messageId: string, emoji: string) => {
     console.log(`Adding reaction ${emoji} to message ${messageId}`);
     // Will be implemented with real data later
+  };
+
+  const handleMessageSend = (content: any, files?: any[]) => {
+    console.log('Message sent:', content);
+    console.log('Files:', files);
+    // Will be implemented with real data handling later
   };
 
   if (!channelId || !channel) {
@@ -367,11 +375,22 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>
-                  <EmojiPicker onEmojiSelect={(emoji) => handleReaction(message.id, emoji)}>
-                    <Button variant="ghost" className="w-full justify-start">
-                      Add Reaction
-                    </Button>
-                  </EmojiPicker>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-start">
+                        Add Reaction
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0" align="start">
+                      <Picker
+                        data={data}
+                        onEmojiSelect={(emoji: any) => handleReaction(message.id, emoji.native)}
+                        theme="light"
+                        previewPosition="none"
+                        skinTonePosition="none"
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </ContextMenuContent>
               </ContextMenu>
             ))}
@@ -387,7 +406,10 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
       </div>
 
       <div className="p-4 border-t">
-        <MessageInput channelId={channelId} channelName={channel.name} />
+        <MessageComposer 
+          onSend={handleMessageSend}
+          placeholder={`Message ${channel.name}`}
+        />
       </div>
     </div>
   );

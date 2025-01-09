@@ -41,9 +41,11 @@ export function MessageComposer({ onSend, placeholder = 'Type a message...' }: M
       }),
     ],
     content: '',
-    onUpdate: ({ editor }) => {
-      // You can handle real-time updates here
-    },
+    editorProps: {
+      attributes: {
+        class: 'min-h-[40px] max-h-[200px] overflow-y-auto focus:outline-none'
+      }
+    }
   });
 
   const handleSend = useCallback(() => {
@@ -111,34 +113,38 @@ export function MessageComposer({ onSend, placeholder = 'Type a message...' }: M
         >
           <Code className="h-4 w-4" />
         </Button>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <Smile className="h-4 w-4" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-full p-0" align="start">
-            <Picker
-              data={data}
-              onEmojiSelect={handleEmojiSelect}
-              theme="light"
-              previewPosition="none"
-              skinTonePosition="none"
-            />
-          </PopoverContent>
-        </Popover>
       </div>
 
-      <EditorContent editor={editor} className="min-h-[100px] focus:outline-none" />
+      <EditorContent editor={editor} />
 
       <div className="flex justify-between items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowFilePond(prev => !prev)}
-        >
-          <Paperclip className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowFilePond(prev => !prev)}
+          >
+            <Paperclip className="h-4 w-4" />
+          </Button>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Smile className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-full p-0" align="start">
+              <Picker
+                data={data}
+                onEmojiSelect={handleEmojiSelect}
+                theme="light"
+                previewPosition="none"
+                skinTonePosition="none"
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <Button onClick={handleSend}>
           <Send className="h-4 w-4 mr-2" />
           Send

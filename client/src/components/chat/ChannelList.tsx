@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getStatusColor } from "@/lib/utils";
 import { NotificationSection } from "@/components/notifications/NotificationSection";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +28,6 @@ import { CreateChannelDialog } from "./CreateChannelDialog";
 import { JoinChannelDialog } from "./JoinChannelDialog";
 import { CreateDMDialog } from "./CreateDMDialog";
 import { useToast } from "@/hooks/use-toast";
-import { useParams } from "wouter";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -53,47 +52,26 @@ interface WorkspaceMember {
   userId: number;
 }
 
-interface Params {
-  workspaceId?: string;
-}
-
 export default function ChannelList({ selectedChannel, onChannelSelect }: ChannelListProps) {
-  const { workspaceId } = useParams<Params>();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
   const [expandedSections, setExpandedSections] = useState({
     starred: true,
     channels: true,
     directMessages: true,
   });
-
   const [showLeaveDialog, setShowLeaveDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState<{show: boolean; channelId: string; channelName: string} | null>(null);
-
-  // Debug logging for workspace changes
-  useEffect(() => {
-    console.log('Workspace ID changed:', workspaceId);
-  }, [workspaceId]);
+  const queryClient = useQueryClient();
 
   // Fetch channels from API
-  const { data: channels, isLoading: channelsLoading, error: channelsError } = useQuery<Channel[]>({
-    queryKey: [`/api/workspaces/${workspaceId}/channels`],
-    enabled: !!workspaceId,
+  const { data: channels, isLoading, error } = useQuery<Channel[]>({
+    queryKey: ['/api/workspaces/1/channels'],
   });
-
-  // Debug logging for channels data
-  useEffect(() => {
-    console.log('Channels data:', channels);
-  }, [channels]);
 
   // Fetch workspace members to check admin status
-  const { data: workspaceMembers, isLoading: membersLoading } = useQuery<WorkspaceMember[]>({
-    queryKey: [`/api/workspaces/${workspaceId}/members`],
-    enabled: !!workspaceId,
+  const { data: workspaceMembers } = useQuery<WorkspaceMember[]>({
+    queryKey: ['/api/workspaces/1/members'],
   });
-
-  const isLoading = channelsLoading || membersLoading;
 
   const isAdmin = workspaceMembers?.some(
     member => member.role === 'admin' || member.role === 'owner'
@@ -116,7 +94,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/workspaces/${workspaceId}/channels`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/workspaces/1/channels'] });
       setShowDeleteDialog(null);
       toast({
         title: "Channel deleted",
@@ -132,55 +110,27 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     },
   });
 
-  // Handle loading state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Handle error state
-  if (channelsError) {
-    return (
-      <div className="p-4 text-sm text-destructive">
-        Failed to load channels. Please try again.
-      </div>
-    );
-  }
-
-  // Group channels
-  const groupedChannels = channels?.reduce((acc, channel) => {
-    if (channel.isDm) {
-      acc.directMessages.push(channel);
-    } else {
-      acc.channels.push(channel);
-    }
-    return acc;
-  }, { channels: [] as Channel[], directMessages: [] as Channel[] }) ?? { channels: [], directMessages: [] };
-
-  // Debug logging for grouped channels
-  console.log('Grouped channels:', groupedChannels);
-
   const handleContextMenu = (action: string, channelId: string) => {
-    const channel = channels?.find(c => c.id.toString() === channelId);
-    if (!channel) return;
-
     switch (action) {
       case 'leave':
-        setShowLeaveDialog({
-          show: true,
-          channelId,
-          channelName: channel.name,
-        });
+        const channel = channels?.find(c => c.id.toString() === channelId);
+        if (channel) {
+          setShowLeaveDialog({
+            show: true,
+            channelId,
+            channelName: channel.name,
+          });
+        }
         break;
       case 'delete':
-        setShowDeleteDialog({
-          show: true,
-          channelId,
-          channelName: channel.name,
-        });
+        const channelToDelete = channels?.find(c => c.id.toString() === channelId);
+        if (channelToDelete) {
+          setShowDeleteDialog({
+            show: true,
+            channelId,
+            channelName: channelToDelete.name,
+          });
+        }
         break;
     }
   };
@@ -210,7 +160,6 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     isDm?: boolean,
   }) => (
     <div
-      key={channel.id}
       className={cn(
         "group w-full flex items-center justify-between px-2 py-1 rounded hover:bg-sidebar-accent text-sidebar-foreground",
         selectedChannel === channel.id.toString() && "bg-sidebar-accent text-sidebar-accent-foreground"
@@ -255,6 +204,34 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
     </div>
   );
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Handle error state
+  if (error) {
+    return (
+      <div className="p-4 text-sm text-destructive">
+        Failed to load channels. Please try again.
+      </div>
+    );
+  }
+
+  // Group channels
+  const groupedChannels = channels?.reduce((acc, channel) => {
+    if (channel.isDm) {
+      acc.directMessages.push(channel);
+    } else {
+      acc.channels.push(channel);
+    }
+    return acc;
+  }, { channels: [] as Channel[], directMessages: [] as Channel[] });
+
   return (
     <>
       <div className="p-2 space-y-4">
@@ -290,18 +267,13 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          {expandedSections.channels && groupedChannels.channels.map((channel) => (
+          {expandedSections.channels && groupedChannels?.channels.map((channel) => (
             <ChannelItem 
               key={channel.id} 
               channel={channel} 
               icon={channel.isPrivate ? Lock : Hash}
             />
           ))}
-          {expandedSections.channels && groupedChannels.channels.length === 0 && (
-            <div className="px-2 py-1 text-sm text-muted-foreground">
-              No channels available
-            </div>
-          )}
         </div>
 
         {/* Direct Messages */}
@@ -325,7 +297,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               }
             />
           </div>
-          {expandedSections.directMessages && groupedChannels.directMessages.map((channel) => (
+          {expandedSections.directMessages && groupedChannels?.directMessages.map((channel) => (
             <ChannelItem 
               key={channel.id} 
               channel={channel} 
@@ -334,11 +306,6 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
               isDm={true}
             />
           ))}
-          {expandedSections.directMessages && groupedChannels.directMessages.length === 0 && (
-            <div className="px-2 py-1 text-sm text-muted-foreground">
-              No direct messages
-            </div>
-          )}
         </div>
       </div>
 

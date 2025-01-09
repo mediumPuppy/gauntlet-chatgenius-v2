@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/context-menu";
 import EmojiPicker from "./EmojiPicker";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getStatusColor, formatStatus } from "@/lib/utils";
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -181,7 +182,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                   </Avatar>
                   <div className={cn(
                     "absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-background",
-                    channel.isOnline ? "bg-green-500" : "bg-gray-500"
+                    getStatusColor(channel.status, channel.isOnline)
                   )} />
                 </div>
               ) : (
@@ -190,7 +191,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
               <h2 className="font-semibold">{channel.name}</h2>
               {channel.isDm && channel.status && (
                 <span className="text-xs text-muted-foreground">
-                  {channel.status.text} {channel.status.emoji}
+                  {formatStatus(channel.status)}
                 </span>
               )}
               {!channel.isDm && (
@@ -247,7 +248,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
             </Sheet>
           </div>
         </div>
-        {/* Search Bar - Only shown when search is active */}
         {showSearch && (
           <div className="mt-2">
             <input
@@ -259,9 +259,7 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         )}
       </div>
 
-      {/* Main Content Area with Messages and Thread */}
       <div className="flex-1">
-        {/* Messages Area */}
         <ScrollArea className="h-full p-4">
           <div className="space-y-4">
             {messages.map((message) => (
@@ -283,7 +281,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                         </div>
                         <p className="text-sm">{message.content}</p>
 
-                        {/* Reactions and Thread */}
                         <div className="flex items-center gap-4 mt-2">
                           <div className="flex -space-x-1">
                             {message.reactions.map((reaction: any, i: number) => (
@@ -322,7 +319,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                                 <SheetTitle>Thread</SheetTitle>
                               </SheetHeader>
 
-                              {/* Original Message */}
                               <div className="mt-4 p-4 border-b bg-muted/30 rounded-lg">
                                 <div className="flex items-start gap-3">
                                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm">
@@ -338,7 +334,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                                 </div>
                               </div>
 
-                              {/* Thread Replies */}
                               <ScrollArea className="flex-1 mt-4">
                                 <div className="space-y-4">
                                   {message.thread.map((reply: any) => (
@@ -358,7 +353,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
                                 </div>
                               </ScrollArea>
 
-                              {/* Thread Input */}
                               <div className="mt-4">
                                 <MessageInput
                                   channelId={channelId}
@@ -392,7 +386,6 @@ export default function ChatArea({ channelId }: ChatAreaProps) {
         </ScrollArea>
       </div>
 
-      {/* Message Input */}
       <div className="p-4 border-t">
         <MessageInput channelId={channelId} channelName={channel.name} />
       </div>

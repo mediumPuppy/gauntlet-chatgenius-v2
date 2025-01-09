@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState } from "react";
+import { getStatusColor } from "@/lib/utils";
 
 interface ChannelListProps {
   selectedChannel: string | null;
@@ -114,7 +115,7 @@ export default function ChannelList({ selectedChannel, onChannelSelect }: Channe
             </Avatar>
             <div className={cn(
               "absolute bottom-0 right-0 w-2 h-2 rounded-full border border-background",
-              channel.isOnline ? "bg-green-500" : "bg-gray-500"
+              getStatusColor(channel.status, channel.isOnline)
             )} />
           </div>
         ) : (

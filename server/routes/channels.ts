@@ -136,6 +136,13 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
         )
       );
 
+    console.log('DM creation memberships check:', {
+      workspaceId,
+      userId,
+      targetUserId,
+      foundMemberships: memberships.map(m => ({ userId: m.userId, workspaceId: m.workspaceId }))
+    });
+
     if (memberships.length !== 2) {
       return res.status(403).json({ message: 'One or both users are not workspace members' });
     }

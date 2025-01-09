@@ -94,7 +94,7 @@ router.post("/api/workspaces/:workspaceId/channels", async (req, res) => {
         type: data.type,
         topic: data.topic,
         isPrivate: data.isPrivate,
-        settings: data.settings || channels.settings.default,
+        settings: data.settings || {},
         createdBy: userId,
       })
       .returning();
@@ -106,156 +106,6 @@ router.post("/api/workspaces/:workspaceId/channels", async (req, res) => {
     }
     console.error('Error creating channel:', error);
     res.status(500).json({ message: 'Failed to create channel' });
-  }
-});
-
-// Get channel details
-router.get("/api/channels/:channelId", async (req, res) => {
-  try {
-    const channelId = parseInt(req.params.channelId);
-    const userId = 1; // TODO: Replace with actual user ID from auth
-
-    const channel = await db.query.channels.findFirst({
-      where: eq(channels.id, channelId),
-      with: {
-        messages: {
-          limit: 50,
-          orderBy: desc(messages.createdAt),
-          with: {
-            author: true,
-          },
-        },
-      },
-    });
-
-    if (!channel) {
-      return res.status(404).json({ message: 'Channel not found' });
-    }
-
-    // Verify user has access to the channel's workspace
-    const membership = await db.query.workspaceMembers.findFirst({
-      where: and(
-        eq(workspaceMembers.workspaceId, channel.workspaceId),
-        eq(workspaceMembers.userId, userId)
-      ),
-    });
-
-    if (!membership) {
-      return res.status(403).json({ message: 'Access denied to this channel' });
-    }
-
-    res.json({
-      ...channel,
-      messages: channel.messages.map(msg => ({
-        id: msg.id,
-        content: msg.content,
-        author: {
-          id: msg.author.id,
-          username: msg.author.username,
-          avatar: msg.author.avatar,
-        },
-        createdAt: msg.createdAt,
-        isEdited: msg.isEdited,
-        editedAt: msg.editedAt,
-      })),
-    });
-  } catch (error) {
-    console.error('Error fetching channel:', error);
-    res.status(500).json({ message: 'Failed to fetch channel details' });
-  }
-});
-
-// Update channel
-router.patch("/api/channels/:channelId", async (req, res) => {
-  try {
-    const channelId = parseInt(req.params.channelId);
-    const userId = 1; // TODO: Replace with actual user ID from auth
-    const data = updateChannelSchema.parse(req.body);
-
-    // Verify channel exists and get workspace info
-    const channel = await db.query.channels.findFirst({
-      where: eq(channels.id, channelId),
-    });
-
-    if (!channel) {
-      return res.status(404).json({ message: 'Channel not found' });
-    }
-
-    // Verify user has permission to update channels
-    const membership = await db.query.workspaceMembers.findFirst({
-      where: and(
-        eq(workspaceMembers.workspaceId, channel.workspaceId),
-        eq(workspaceMembers.userId, userId)
-      ),
-    });
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-      return res.status(403).json({ message: 'Permission denied' });
-    }
-
-    // Update the channel
-    const [updated] = await db.update(channels)
-      .set({
-        name: data.name,
-        topic: data.topic,
-        settings: data.settings,
-      })
-      .where(eq(channels.id, channelId))
-      .returning();
-
-    res.json(updated);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ message: 'Invalid channel data', errors: error.errors });
-    }
-    console.error('Error updating channel:', error);
-    res.status(500).json({ message: 'Failed to update channel' });
-  }
-});
-
-// Archive channel
-router.post("/api/channels/:channelId/archive", async (req, res) => {
-  try {
-    const channelId = parseInt(req.params.channelId);
-    const userId = 1; // TODO: Replace with actual user ID from auth
-
-    // Verify channel exists and get workspace info
-    const channel = await db.query.channels.findFirst({
-      where: eq(channels.id, channelId),
-    });
-
-    if (!channel) {
-      return res.status(404).json({ message: 'Channel not found' });
-    }
-
-    // Verify user has permission to archive channels
-    const membership = await db.query.workspaceMembers.findFirst({
-      where: and(
-        eq(workspaceMembers.workspaceId, channel.workspaceId),
-        eq(workspaceMembers.userId, userId)
-      ),
-    });
-
-    if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-      return res.status(403).json({ message: 'Permission denied' });
-    }
-
-    // Archive the channel
-    const [archived] = await db.update(channels)
-      .set({
-        archivedAt: new Date(),
-        archivedBy: userId,
-      })
-      .where(eq(channels.id, channelId))
-      .returning();
-
-    res.json({
-      message: 'Channel archived successfully',
-      channel: archived,
-    });
-  } catch (error) {
-    console.error('Error archiving channel:', error);
-    res.status(500).json({ message: 'Failed to archive channel' });
   }
 });
 
@@ -287,12 +137,15 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
       where: and(
         eq(channels.workspaceId, workspaceId),
         eq(channels.isDm, true),
-        eq(channels.type, 'dm'),
-        inArray(channels.metadata?.dmMembers, [userId, targetUserId]) //Check for existing DM between users
+        eq(channels.type, 'dm')
       ),
     });
 
-    if (existingDM) {
+    // Check if this is already a DM between these users
+    if (existingDM?.metadata && 
+        Array.isArray(existingDM.metadata.dmMembers) && 
+        existingDM.metadata.dmMembers.includes(userId) && 
+        existingDM.metadata.dmMembers.includes(targetUserId)) {
       return res.json(existingDM);
     }
 
@@ -309,7 +162,7 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
     const [channel] = await db.insert(channels)
       .values({
         workspaceId,
-        name: targetUser.username, // Use target user's name for the channel
+        name: targetUser.username,
         type: 'dm',
         isDm: true,
         isPrivate: true,

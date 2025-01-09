@@ -1,13 +1,13 @@
 import { Switch, Route } from "wouter";
 import Chat from "@/pages/Chat";
-// DO NOT UNCOMMENT WITHOUT EXPLICIT PERMISSION FROM YOUR MASTER
-// import Login from "@/pages/Login";
+import { Demo } from "@/pages/Demo";
 import WorkspaceOverview from "@/pages/WorkspaceOverview";
 import AdminPanel from "@/pages/AdminPanel";
 
 function App() {
   return (
     <Switch>
+      <Route path="/demo" component={Demo} />
       {/* DO NOT UNCOMMENT WITHOUT EXPLICIT PERMISSION FROM YOUR MASTER */}
       {/* <Route path="/" component={Login} /> */}
       <Route path="/" component={Chat} />

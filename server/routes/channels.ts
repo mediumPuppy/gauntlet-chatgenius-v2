@@ -216,4 +216,42 @@ router.post("/api/workspaces/:workspaceId/dms", async (req, res) => {
   }
 });
 
+// Delete a channel
+router.delete("/api/channels/:channelId", async (req, res) => {
+  try {
+    const channelId = parseInt(req.params.channelId);
+    const userId = 1; // TODO: Replace with actual user ID from auth
+
+    // Get channel to verify workspace access
+    const channel = await db.query.channels.findFirst({
+      where: eq(channels.id, channelId),
+    });
+
+    if (!channel) {
+      return res.status(404).json({ message: 'Channel not found' });
+    }
+
+    // Verify user has admin permissions in the workspace
+    const membership = await db.query.workspaceMembers.findFirst({
+      where: and(
+        eq(workspaceMembers.workspaceId, channel.workspaceId),
+        eq(workspaceMembers.userId, userId)
+      ),
+    });
+
+    if (!membership || (membership.role !== 'admin' && membership.role !== 'owner')) {
+      return res.status(403).json({ message: 'Only workspace admins can delete channels' });
+    }
+
+    // Delete the channel
+    await db.delete(channels)
+      .where(eq(channels.id, channelId));
+
+    res.json({ message: 'Channel deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting channel:', error);
+    res.status(500).json({ message: 'Failed to delete channel' });
+  }
+});
+
 export default router;

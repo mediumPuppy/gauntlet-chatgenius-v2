@@ -7,7 +7,10 @@ import FilePondPluginImagePreview from 'filepond-plugin-image-preview';
 import FilePondPluginFileValidateType from 'filepond-plugin-file-validate-type';
 import FilePondPluginFileValidateSize from 'filepond-plugin-file-validate-size';
 import { Button } from '@/components/ui/button';
-import { Send, Bold, Italic, Code, Paperclip } from 'lucide-react';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Send, Bold, Italic, Code, Paperclip, Smile } from 'lucide-react';
+import data from '@emoji-mart/data';
+import Picker from '@emoji-mart/react';
 import 'filepond/dist/filepond.min.css';
 import 'filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css';
 
@@ -73,6 +76,12 @@ export function MessageComposer({ onSend, placeholder = 'Type a message...' }: M
     setFiles(uploadedFiles);
   };
 
+  const handleEmojiSelect = (emoji: any) => {
+    if (editor) {
+      editor.chain().focus().insertContent(emoji.native).run();
+    }
+  };
+
   if (!editor) return null;
 
   return (
@@ -102,7 +111,23 @@ export function MessageComposer({ onSend, placeholder = 'Type a message...' }: M
         >
           <Code className="h-4 w-4" />
         </Button>
-        </div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="sm">
+              <Smile className="h-4 w-4" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-full p-0" align="start">
+            <Picker
+              data={data}
+              onEmojiSelect={handleEmojiSelect}
+              theme="light"
+              previewPosition="none"
+              skinTonePosition="none"
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <EditorContent editor={editor} className="min-h-[100px] focus:outline-none" />
 
